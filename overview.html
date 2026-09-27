@@ -41,9 +41,6 @@
                         <button
                             class="period-tab px-3 py-1 rounded-lg text-xs bg-surface-container-lowest text-primary font-semibold shadow-sm transition-all"
                             type="button">เดือนนี้</button>
-                        <button
-                            class="period-tab px-3 py-1 rounded-lg text-xs text-on-surface-variant hover:text-on-surface transition-all"
-                            type="button">ไตรมาสนี้</button>
                     </div>
                 </div>
             </div>
@@ -138,13 +135,13 @@
                     <div class="flex items-start justify-between">
                         <span
                             class="text-xs font-medium text-on-surface-variant uppercase tracking-wider">การเติบโต</span>
-                        <span class="material-symbols-outlined text-emerald-600 text-[20px]">trending_up</span>
+                        <span id="kpi-growth-icon" class="material-symbols-outlined text-emerald-600 text-[20px]">trending_up</span>
                     </div>
                     <div class="mt-3">
-                        <span class="text-2xl font-bold text-emerald-600 tracking-tight">+12.5%</span>
+                        <span id="kpi-growth-percent" class="text-2xl font-bold text-emerald-600 tracking-tight">+12.5%</span>
                         <div
                             class="flex items-center justify-between mt-2 pt-1 border-t border-outline-variant text-[11px]">
-                            <span class="text-emerald-700 font-medium">MoM Growth</span>
+                            <span id="kpi-growth-label" class="text-emerald-700 font-medium">Growth vs Previous</span>
                             <span class="text-on-surface-variant">ต่อเนื่อง 3 เดือน</span>
                         </div>
                     </div>
@@ -274,6 +271,29 @@
                         document.getElementById('kpi-total-orders').innerText = formatNumber.format(data.total_orders);
                         document.getElementById('kpi-best-product').innerText = data.best_product.name;
                         document.getElementById('kpi-best-product-qty').innerText = `${formatNumber.format(data.best_product.quantity)} ชิ้น`;
+
+                        // Update Growth KPI
+                        const growthPercent = data.growth_percent || 0;
+                        const growthEl = document.getElementById('kpi-growth-percent');
+                        const growthIcon = document.getElementById('kpi-growth-icon');
+                        const growthLabel = document.getElementById('kpi-growth-label');
+                        
+                        let periodLabel = 'เมื่อเทียบกับช่วงก่อนหน้า';
+                        
+                        if (growthPercent >= 0) {
+                            growthEl.innerText = `+${growthPercent}%`;
+                            growthEl.className = 'text-2xl font-bold text-emerald-600 tracking-tight';
+                            growthIcon.innerText = 'trending_up';
+                            growthIcon.className = 'material-symbols-outlined text-emerald-600 text-[20px]';
+                            growthLabel.className = 'text-emerald-700 font-medium';
+                        } else {
+                            growthEl.innerText = `${growthPercent}%`;
+                            growthEl.className = 'text-2xl font-bold text-error tracking-tight';
+                            growthIcon.innerText = 'trending_down';
+                            growthIcon.className = 'material-symbols-outlined text-error text-[20px]';
+                            growthLabel.className = 'text-error font-medium';
+                        }
+                        growthLabel.innerText = periodLabel;
 
                         const kpiTarget = data.kpi_target || 288000;
                         const progressPercent = Math.min(100, Math.max(0, (data.total_sales / kpiTarget) * 100));

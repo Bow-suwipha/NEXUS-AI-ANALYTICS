@@ -30,17 +30,19 @@ $stmt = $pdo->prepare("SELECT
 $stmt->execute([$startDate, $endDate]);
 $results = $stmt->fetchAll();
 
-// Find the maximum sales among all branches to use as the baseline target
-$max_sales = 0;
-foreach ($results as $r) {
-    $s = (float)$r['total_sales'];
-    if ($s > $max_sales) {
-        $max_sales = $s;
-    }
+// กำหนดเป้าหมายคงที่ตามช่วงเวลา (ตามที่คุณลูกค้าต้องการ)
+$global_target = 20000; // ค่าเริ่มต้น (เดือน)
+if ($period === 'today') {
+    $global_target = 5000;
+} elseif ($period === 'week') {
+    $global_target = 12000;
+} elseif ($period === 'month') {
+    $global_target = 20000;
+} elseif ($period === 'quarter') {
+    $global_target = 60000;
+} elseif ($period === 'year') {
+    $global_target = 240000;
 }
-
-// If all sales are 0, set a default fallback target
-$global_target = $max_sales > 0 ? $max_sales : 10000;
 
 $formatted = [];
 foreach ($results as $r) {

@@ -41,9 +41,6 @@
                                 data-period="month" class="sa-period-tab px-space-sm py-1 rounded-lg bg-surface text-primary text-sm font-semibold shadow-sm"
                                 type="button">เดือนนี้</button>
                             <button
-                                data-period="quarter" class="sa-period-tab px-space-sm py-1 rounded-lg text-on-surface-variant text-sm hover:text-on-surface transition-all"
-                                type="button">ไตรมาสนี้</button>
-                            <button
                                 class="px-space-sm py-1 rounded-lg text-on-surface-variant text-sm hover:text-on-surface transition-all flex items-center gap-1 border border-outline-variant bg-surface"
                                 type="button">
                                 <span class="material-symbols-outlined text-[14px]">tune</span> ปรับแต่ง
@@ -55,11 +52,13 @@
                             <label class="text-xs text-on-surface-variant font-medium">วันที่</label>
                             <div
                                 class="relative flex items-center bg-surface-container-low rounded-xl px-space-sm py-2 border border-outline-variant">
-                                <input
+                                <input id="custom-start-date"
                                     class="w-full bg-transparent border-none p-0 text-sm text-on-surface focus:outline-none focus:ring-0"
-                                    type="text" value="01/08/2026 – 31/08/2026">
-                                <span
-                                    class="material-symbols-outlined text-[18px] text-on-surface-variant ml-2 cursor-pointer">date_range</span>
+                                    type="date" value="2026-08-01">
+                                <span class="mx-2 text-on-surface-variant">-</span>
+                                <input id="custom-end-date"
+                                    class="w-full bg-transparent border-none p-0 text-sm text-on-surface focus:outline-none focus:ring-0"
+                                    type="date" value="2026-08-31">
                             </div>
                         </div>
                         <div class="lg:col-span-3 flex flex-col gap-1 relative">
@@ -322,17 +321,18 @@
                 const maxSales = Math.max(...branches.map(b => b.sales), ...branches.map(b => b.target));
                 const averageTarget = branches.length > 0 ? branches.reduce((acc, b) => acc + b.target, 0) / branches.length : 0;
                 
-                // Render target line
+                // Render target line dynamically positioned
+                const targetLineTop = maxSales > 0 ? 100 - ((averageTarget / maxSales) * 100) : 50;
                 let html = `
-                    <div class="absolute left-0 right-0 top-1/2 border-b border-dashed border-outline-variant z-20 flex items-center justify-end pr-2 pointer-events-none">
-                        <span class="text-xs text-on-surface-variant font-medium bg-surface px-2 py-1 rounded-lg border border-outline-variant shadow-sm pointer-events-auto">
-                            เฉลี่ยเป้าหมาย: ฿${formatNumber.format(averageTarget)}
+                    <div class="absolute left-0 right-0 border-b border-dashed border-outline-variant z-20 flex items-center justify-center pointer-events-none" style="top: ${targetLineTop}%;">
+                        <span class="text-xs text-on-surface-variant font-medium bg-surface/80 backdrop-blur-sm px-2 py-1 rounded-lg border border-outline-variant shadow-sm pointer-events-auto">
+                            เป้าหมาย: ฿${formatNumber.format(averageTarget)}
                         </span>
                     </div>
                 `;
 
                 branches.forEach(b => {
-                    const salesK = (b.sales / 1000).toFixed(0) + 'k';
+                    const salesK = Number((b.sales / 1000).toFixed(1)) + 'k';
                     const heightPercent = maxSales > 0 ? (b.sales / maxSales) * 100 : 0;
                     
                     let barColor = "bg-primary";
