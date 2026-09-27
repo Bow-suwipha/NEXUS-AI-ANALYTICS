@@ -27,10 +27,24 @@
         </div>
         <!-- Right Utility Group -->
         <div class="flex items-center gap-space-sm">
-            <button class="relative p-2 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all" type="button">
-                <span class="material-symbols-outlined text-[20px]">notifications</span>
-                <span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-error"></span>
-            </button>
+            <div class="relative">
+                <button id="nav-btn-notification" onclick="toggleNotifications()" class="relative p-2 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all" type="button">
+                    <span class="material-symbols-outlined text-[20px]">notifications</span>
+                    <span id="nav-notif-badge" class="absolute top-1 right-1 w-2 h-2 rounded-full bg-error hidden"></span>
+                </button>
+                
+                <!-- Notification Dropdown -->
+                <div id="nav-notif-dropdown" class="absolute right-0 mt-2 w-80 bg-surface border border-outline-variant rounded-xl shadow-lg hidden overflow-hidden z-50 flex flex-col max-h-96">
+                    <div class="p-3 border-b border-outline-variant flex justify-between items-center bg-surface-container-lowest">
+                        <h3 class="text-sm font-semibold text-on-surface">การแจ้งเตือน</h3>
+                        <button onclick="markNotificationsRead()" class="text-xs text-primary hover:underline">อ่านทั้งหมด</button>
+                    </div>
+                    <div id="nav-notif-list" class="flex-1 overflow-y-auto">
+                        <!-- Items will be populated here -->
+                        <div class="p-4 text-center text-sm text-on-surface-variant">ไม่มีการแจ้งเตือนใหม่</div>
+                    </div>
+                </div>
+            </div>
             <!-- User Info -->
             <div class="flex items-center gap-3 pl-4 border-l border-outline-variant">
                 <div class="hidden sm:block text-right">

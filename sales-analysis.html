@@ -32,16 +32,16 @@
                         <div
                             class="flex items-center gap-1 bg-surface-container-low p-1 rounded-xl self-start lg:self-auto">
                             <button
-                                class="sa-period-tab px-space-sm py-1 rounded-lg text-on-surface-variant text-sm hover:text-on-surface transition-all"
+                                data-period="today" class="sa-period-tab px-space-sm py-1 rounded-lg text-on-surface-variant text-sm hover:text-on-surface transition-all"
                                 type="button">วันนี้</button>
                             <button
-                                class="sa-period-tab px-space-sm py-1 rounded-lg text-on-surface-variant text-sm hover:text-on-surface transition-all"
+                                data-period="week" class="sa-period-tab px-space-sm py-1 rounded-lg text-on-surface-variant text-sm hover:text-on-surface transition-all"
                                 type="button">สัปดาห์นี้</button>
                             <button
-                                class="sa-period-tab px-space-sm py-1 rounded-lg bg-surface text-primary text-sm font-semibold shadow-sm"
+                                data-period="month" class="sa-period-tab px-space-sm py-1 rounded-lg bg-surface text-primary text-sm font-semibold shadow-sm"
                                 type="button">เดือนนี้</button>
                             <button
-                                class="sa-period-tab px-space-sm py-1 rounded-lg text-on-surface-variant text-sm hover:text-on-surface transition-all"
+                                data-period="quarter" class="sa-period-tab px-space-sm py-1 rounded-lg text-on-surface-variant text-sm hover:text-on-surface transition-all"
                                 type="button">ไตรมาสนี้</button>
                             <button
                                 class="px-space-sm py-1 rounded-lg text-on-surface-variant text-sm hover:text-on-surface transition-all flex items-center gap-1 border border-outline-variant bg-surface"
@@ -190,67 +190,9 @@
                             </div>
                             <div
                                 class="w-full bg-surface-container-low rounded-2xl p-space-md border border-outline-variant/50 overflow-x-auto">
-                                <div
+                                <div id="branch-chart-container"
                                     class="h-64 min-w-[400px] flex items-end justify-between gap-4 px-4 pb-2 pt-6 relative">
-                                    <div
-                                        class="absolute left-0 right-0 top-1/2 border-b border-dashed border-outline-variant z-20 flex items-center justify-end pr-2 pointer-events-none">
-                                        <span
-                                            class="text-xs text-on-surface-variant font-medium bg-surface px-2 py-1 rounded-lg border border-outline-variant shadow-sm pointer-events-auto">เป้าหมาย:
-                                            ฿300,000</span>
-                                    </div>
-                                    <!-- เรียงสาขาใหม่ให้ตรง Database BR-001 ถึง BR-006 -->
-                                    <div
-                                        class="flex-1 flex flex-col items-center h-full justify-end z-10 group relative">
-                                        <div
-                                            class="absolute -top-3 bg-error text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm">
-                                            -18%</div>
-                                        <span class="text-xs text-error font-bold mb-1">฿205k</span>
-                                        <div class="w-full max-w-[40px] bg-error rounded-t-xl hover:opacity-90"
-                                            style="height: 41%;"></div>
-                                        <div class="mt-2 text-center"><span
-                                                class="text-sm text-error block font-bold truncate">เชียงใหม่</span><span
-                                                class="text-[10px] text-on-surface-variant">BR-001</span></div>
-                                    </div>
-                                    <div class="flex-1 flex flex-col items-center h-full justify-end z-10 group">
-                                        <span class="text-xs text-on-surface font-semibold mb-1">฿315k</span>
-                                        <div class="w-full max-w-[40px] bg-primary rounded-t-xl hover:opacity-90"
-                                            style="height: 63%;"></div>
-                                        <div class="mt-2 text-center"><span
-                                                class="text-sm text-on-surface font-semibold block truncate">ลำปาง</span><span
-                                                class="text-[10px] text-on-surface-variant">BR-002</span></div>
-                                    </div>
-                                    <div class="flex-1 flex flex-col items-center h-full justify-end z-10 group">
-                                        <span class="text-xs text-on-surface font-semibold mb-1">฿340k</span>
-                                        <div class="w-full max-w-[40px] bg-primary rounded-t-xl hover:opacity-90"
-                                            style="height: 68%;"></div>
-                                        <div class="mt-2 text-center"><span
-                                                class="text-sm text-on-surface font-semibold block truncate">ขอนแก่น</span><span
-                                                class="text-[10px] text-on-surface-variant">BR-003</span></div>
-                                    </div>
-                                    <div class="flex-1 flex flex-col items-center h-full justify-end z-10 group">
-                                        <span class="text-xs text-on-surface font-semibold mb-1">฿330k</span>
-                                        <div class="w-full max-w-[40px] bg-primary rounded-t-xl hover:opacity-90"
-                                            style="height: 66%;"></div>
-                                        <div class="mt-2 text-center"><span
-                                                class="text-sm text-on-surface font-semibold block truncate">โคราช</span><span
-                                                class="text-[10px] text-on-surface-variant">BR-004</span></div>
-                                    </div>
-                                    <div class="flex-1 flex flex-col items-center h-full justify-end z-10 group">
-                                        <span class="text-xs text-on-surface font-semibold mb-1">฿410k</span>
-                                        <div class="w-full max-w-[40px] bg-primary rounded-t-xl hover:opacity-90"
-                                            style="height: 82%;"></div>
-                                        <div class="mt-2 text-center"><span
-                                                class="text-sm text-on-surface font-semibold block truncate">กรุงเทพฯ</span><span
-                                                class="text-[10px] text-on-surface-variant">BR-005</span></div>
-                                    </div>
-                                    <div class="flex-1 flex flex-col items-center h-full justify-end z-10 group">
-                                        <span class="text-xs text-on-surface font-semibold mb-1">฿295k</span>
-                                        <div class="w-full max-w-[40px] bg-primary rounded-t-xl hover:opacity-90 opacity-70"
-                                            style="height: 59%;"></div>
-                                        <div class="mt-2 text-center"><span
-                                                class="text-sm text-on-surface font-semibold block truncate">ชลบุรี</span><span
-                                                class="text-[10px] text-on-surface-variant">BR-006</span></div>
-                                    </div>
+                                    <!-- Dynamic content will be rendered here -->
                                 </div>
                             </div>
                         </div>
@@ -307,13 +249,7 @@
         <script>
             (async () => {
 
-            const periodTabs = document.querySelectorAll('.sa-period-tab');
-            periodTabs.forEach(tab => {
-                tab.addEventListener('click', (e) => {
-                    periodTabs.forEach(t => { t.className = 'sa-period-tab px-space-sm py-1 rounded-lg text-on-surface-variant text-sm hover:text-on-surface transition-all'; });
-                    e.target.className = 'sa-period-tab px-space-sm py-1 rounded-lg bg-surface text-primary text-sm font-semibold shadow-sm';
-                });
-            });
+            // JS initialized from bottom script
 
             const formatNumber = new Intl.NumberFormat('th-TH');
             let allProducts = [];
@@ -373,20 +309,95 @@
                 if (currentPage < totalPages) { currentPage++; renderProductsTable(); }
             });
 
-            try {
-                const res = await fetch('api/sales_products.php');
-                if (res.ok) {
-                    allProducts = await res.json();
-                    filteredProducts = [...allProducts]; // Initialize filtered
-                    let totalSales = 0;
-                    allProducts.forEach(p => totalSales += p.sales);
-                    document.getElementById('total-sales-value').innerText = `฿${formatNumber.format(totalSales)}`;
-                    renderProductsTable();
+            const renderBranchChart = (branches) => {
+                const container = document.getElementById('branch-chart-container');
+                container.innerHTML = '';
+                
+                if (branches.length === 0) {
+                    container.innerHTML = `<div class="w-full text-center text-sm text-on-surface-variant mt-20">ไม่พบข้อมูลสาขาในหมวดหมู่นี้</div>`;
+                    return;
                 }
-            } catch (err) {
-                console.error("Failed to load products", err);
-                document.getElementById('products-table-body').innerHTML = `<tr><td colspan="5" class="py-4 text-center text-sm text-error">ไม่สามารถโหลดข้อมูลได้</td></tr>`;
-            }
+
+                // Find max sales to scale the bars
+                const maxSales = Math.max(...branches.map(b => b.sales), ...branches.map(b => b.target));
+                const averageTarget = branches.length > 0 ? branches.reduce((acc, b) => acc + b.target, 0) / branches.length : 0;
+                
+                // Render target line
+                let html = `
+                    <div class="absolute left-0 right-0 top-1/2 border-b border-dashed border-outline-variant z-20 flex items-center justify-end pr-2 pointer-events-none">
+                        <span class="text-xs text-on-surface-variant font-medium bg-surface px-2 py-1 rounded-lg border border-outline-variant shadow-sm pointer-events-auto">
+                            เฉลี่ยเป้าหมาย: ฿${formatNumber.format(averageTarget)}
+                        </span>
+                    </div>
+                `;
+
+                branches.forEach(b => {
+                    const salesK = (b.sales / 1000).toFixed(0) + 'k';
+                    const heightPercent = maxSales > 0 ? (b.sales / maxSales) * 100 : 0;
+                    
+                    let barColor = "bg-primary";
+                    let textColor = "text-on-surface";
+                    let diffBadge = "";
+                    
+                    if (b.diff_percent < 0) {
+                        barColor = "bg-error";
+                        textColor = "text-error";
+                        diffBadge = `<div class="absolute -top-3 bg-error text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm">${b.diff_percent}%</div>`;
+                    }
+
+                    html += `
+                    <div class="flex-1 flex flex-col items-center h-full justify-end z-10 group relative">
+                        ${diffBadge}
+                        <span class="text-xs ${textColor} font-bold mb-1">฿${salesK}</span>
+                        <div class="w-full max-w-[40px] ${barColor} rounded-t-xl hover:opacity-90" style="height: ${heightPercent}%;"></div>
+                        <div class="mt-2 text-center">
+                            <span class="text-sm ${textColor} block font-bold truncate">${b.branch_name}</span>
+                            <span class="text-[10px] text-on-surface-variant">${b.branch_code}</span>
+                        </div>
+                    </div>
+                    `;
+                });
+                container.innerHTML = html;
+            };
+
+            const fetchDashboardData = async (period = 'month') => {
+                try {
+                    // Fetch Products
+                    const pRes = await fetch(`api/sales_products.php?period=${period}`);
+                    if (pRes.ok) {
+                        allProducts = await pRes.json();
+                        filteredProducts = [...allProducts];
+                        let totalSales = 0;
+                        allProducts.forEach(p => totalSales += p.sales);
+                        document.getElementById('total-sales-value').innerText = `฿${formatNumber.format(totalSales)}`;
+                        renderProductsTable();
+                    }
+                    
+                    // Fetch Branches
+                    const bRes = await fetch(`api/sales_branches.php?period=${period}`);
+                    if (bRes.ok) {
+                        const branches = await bRes.json();
+                        renderBranchChart(branches);
+                    }
+                } catch (err) {
+                    console.error("Failed to load dashboard data", err);
+                    document.getElementById('products-table-body').innerHTML = `<tr><td colspan="5" class="py-4 text-center text-sm text-error">ไม่สามารถโหลดข้อมูลได้</td></tr>`;
+                }
+            };
+            
+            // Tab Event Listeners
+            const periodTabs = document.querySelectorAll('.sa-period-tab');
+            periodTabs.forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    periodTabs.forEach(t => { t.className = 'sa-period-tab px-space-sm py-1 rounded-lg text-on-surface-variant text-sm hover:text-on-surface transition-all'; });
+                    e.target.className = 'sa-period-tab px-space-sm py-1 rounded-lg bg-surface text-primary text-sm font-semibold shadow-sm';
+                    const period = e.target.getAttribute('data-period');
+                    fetchDashboardData(period);
+                });
+            });
+
+            // Initial Load
+            fetchDashboardData('month');
 
             const filterTable = (query) => {
                 query = query.toLowerCase();

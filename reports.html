@@ -27,22 +27,37 @@
                 <!-- Filters & Actions -->
                 <div class="flex flex-wrap items-center gap-2">
                     <div class="relative bg-surface-container-low rounded-xl px-3 py-1.5 border border-outline-variant flex items-center">
-                        <select class="bg-transparent bg-none border-none p-0 text-sm focus:ring-0 appearance-none pr-6">
-                            <option>ทุกหมวดหมู่</option>
-                            <option>ยอดขายประจำวัน</option>
-                            <option>รายสัปดาห์</option>
-                            <option>รายเดือน</option>
+                        <select id="filter-type" class="bg-transparent bg-none border-none p-0 text-sm focus:ring-0 appearance-none pr-6">
+                            <option value="all">ทุกหมวดหมู่</option>
+                            <option value="Daily">ยอดขายประจำวัน</option>
+                            <option value="Weekly">รายสัปดาห์</option>
+                            <option value="Monthly">รายเดือน</option>
                         </select>
                         <span class="material-symbols-outlined text-[18px] text-on-surface-variant absolute right-2 pointer-events-none">expand_more</span>
                     </div>
-                    <div class="flex items-center bg-surface-container-low rounded-xl px-3 py-1.5 border border-outline-variant">
-                        <input class="bg-transparent border-none p-0 text-sm w-40 focus:ring-0" type="text" placeholder="เลือกช่วงเวลา">
-                        <span class="material-symbols-outlined text-[18px] text-on-surface-variant ml-2">calendar_month</span>
+
+                    <!-- Generate Button with Dropdown -->
+                    <div class="relative inline-block text-left ml-auto sm:ml-2">
+                        <button onclick="document.getElementById('report-type-dropdown').classList.toggle('hidden')" class="px-4 py-2 bg-primary text-on-primary text-sm font-semibold rounded-xl hover:opacity-90 flex items-center gap-2 shadow-sm transition-opacity">
+                            <span class="material-symbols-outlined text-[18px]">add_chart</span>สร้างรายงาน <span class="material-symbols-outlined text-[18px]">expand_more</span>
+                        </button>
+                        <div id="report-type-dropdown" class="origin-top-right absolute right-0 mt-2 w-48 rounded-xl shadow-lg bg-surface ring-1 ring-black ring-opacity-5 divide-y divide-outline-variant hidden z-50 border border-outline-variant overflow-hidden">
+                            <div class="py-1">
+                                <a href="#" onclick="openGenerateModal('Daily'); return false;" class="group flex items-center px-4 py-2 text-sm text-on-surface hover:bg-primary/10 hover:text-primary transition-colors">
+                                    <span class="material-symbols-outlined text-[18px] mr-2 text-on-surface-variant group-hover:text-primary">today</span>
+                                    ยอดขายประจำวัน
+                                </a>
+                                <a href="#" onclick="openGenerateModal('Weekly'); return false;" class="group flex items-center px-4 py-2 text-sm text-on-surface hover:bg-primary/10 hover:text-primary transition-colors">
+                                    <span class="material-symbols-outlined text-[18px] mr-2 text-on-surface-variant group-hover:text-primary">date_range</span>
+                                    รายสัปดาห์
+                                </a>
+                                <a href="#" onclick="openGenerateModal('Monthly'); return false;" class="group flex items-center px-4 py-2 text-sm text-on-surface hover:bg-primary/10 hover:text-primary transition-colors">
+                                    <span class="material-symbols-outlined text-[18px] mr-2 text-on-surface-variant group-hover:text-primary">calendar_month</span>
+                                    รายเดือน
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                    <!-- Generate Button -->
-                    <button onclick="document.getElementById('generate-modal').classList.remove('hidden')" class="ml-auto sm:ml-2 px-4 py-2 bg-primary text-on-primary text-sm font-semibold rounded-xl hover:opacity-90 flex items-center gap-2 shadow-sm transition-opacity">
-                        <span class="material-symbols-outlined text-[18px]">add_chart</span>สร้างรายงานประจำเดือน
-                    </button>
                 </div>
             </div>
 
@@ -52,22 +67,23 @@
                 <div class="text-sm text-on-surface-variant col-span-full text-center py-8">กำลังโหลดรายงาน...</div>
             </div>
         </div>
-        <script src="components.js?v=6"></script>
+        <script src="components.js?v=7"></script>
 
         <!-- Generate Report Modal -->
         <div id="generate-modal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
             <div class="bg-surface rounded-2xl border border-outline-variant shadow-xl w-full max-w-md flex flex-col overflow-hidden">
                 <div class="p-4 border-b border-outline-variant flex items-center justify-between bg-surface-container-lowest">
-                    <h2 class="text-lg font-semibold text-on-surface">สร้างรายงานประจำเดือน</h2>
+                    <h2 class="text-lg font-semibold text-on-surface">สร้างรายงาน <span id="modal-report-type-text" class="text-primary"></span></h2>
                     <button onclick="document.getElementById('generate-modal').classList.add('hidden')" class="text-on-surface-variant hover:text-on-surface">
                         <span class="material-symbols-outlined">close</span>
                     </button>
                 </div>
                 <div class="p-space-lg flex flex-col gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-on-surface mb-1">เลือกเดือนที่ต้องการสรุป</label>
-                        <input type="month" id="report-month" class="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-2.5 text-sm text-on-surface focus:ring-primary focus:border-primary">
-                        <p class="text-xs text-on-surface-variant mt-1">ไฟล์จะถูกตั้งชื่อในรูปแบบ เดือน_ปี อัตโนมัติ</p>
+                        <label id="modal-date-label" class="block text-sm font-medium text-on-surface mb-1">เลือกเดือนที่ต้องการสรุป</label>
+                        <input type="month" id="report-date-input" class="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-2.5 text-sm text-on-surface focus:ring-primary focus:border-primary">
+                        <p id="modal-date-hint" class="text-xs text-on-surface-variant mt-1">ไฟล์จะถูกตั้งชื่อในรูปแบบ เดือน_ปี อัตโนมัติ</p>
+                        <input type="hidden" id="report-type-input" value="Monthly">
                     </div>
                 </div>
                 <div class="p-4 border-t border-outline-variant bg-surface-container-lowest flex justify-end gap-2">
@@ -81,9 +97,11 @@
 
         <script>
             async function submitGenerateReport() {
-                const monthInput = document.getElementById('report-month').value;
-                if (!monthInput) {
-                    alert('กรุณาเลือกเดือน');
+                const dateInput = document.getElementById('report-date-input').value;
+                const typeInput = document.getElementById('report-type-input').value;
+                
+                if (!dateInput) {
+                    alert('กรุณาเลือกช่วงเวลาที่ต้องการ');
                     return;
                 }
                 
@@ -97,7 +115,7 @@
                     const res = await fetch('api/generate_report.php', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ month_val: monthInput })
+                        body: JSON.stringify({ type: typeInput, date_val: dateInput })
                     });
                     const data = await res.json();
                     
@@ -117,46 +135,136 @@
                 }
             }
 
+            let allReports = [];
+
+            function renderReports(reports) {
+                const container = document.getElementById('reports-container');
+                container.innerHTML = '';
+
+                if (reports.length === 0) {
+                    container.innerHTML = `<div class="text-sm text-on-surface-variant col-span-full text-center py-8">ไม่พบรายงาน</div>`;
+                    return;
+                }
+
+                reports.forEach(r => {
+                    const date = new Date(r.created_at).toLocaleDateString('th-TH');
+                    const card = document.createElement('div');
+                    card.className = "bg-surface rounded-2xl border border-outline-variant shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow";
+
+                    let badgeClass = "bg-surface-container-low text-on-surface-variant";
+                    if (r.report_type === 'Weekly') badgeClass = "bg-primary/20 text-on-surface font-medium";
+
+                    card.innerHTML = `
+                    <div class="p-space-md border-b border-surface-container">
+                        <div class="flex items-start justify-between mb-2">
+                            <span class="px-2 py-1 ${badgeClass} text-xs rounded-md">${r.report_type} Report</span>
+                            <span class="text-xs text-on-surface-variant">${date}</span>
+                        </div>
+                        <h3 class="text-base font-semibold text-on-surface">${r.report_name}</h3>
+                    </div>
+                    <div class="p-space-sm flex items-center gap-2 justify-end bg-surface-container-lowest rounded-b-2xl">
+                        <button onclick="deleteReport(${r.id})" class="mr-auto px-2 py-1.5 rounded-lg text-on-surface-variant hover:text-error hover:bg-error/10 flex items-center gap-1 transition-colors text-xs" title="ลบรายงาน">
+                            <span class="material-symbols-outlined text-[16px]">delete</span>
+                        </button>
+                        <button data-export-url="export_pdf.php?id=${r.id}" data-export-type="pdf" class="btn-export px-3 py-1.5 rounded-lg bg-surface text-on-surface border border-outline-variant text-xs font-medium hover:bg-surface-container-low flex items-center gap-1 transition-colors">
+                            <span class="material-symbols-outlined text-[16px] text-error">picture_as_pdf</span> PDF
+                        </button>
+                        <button data-export-url="export_excel.php?id=${r.id}" data-export-type="excel" class="btn-export px-3 py-1.5 rounded-lg bg-primary text-on-primary text-xs font-semibold hover:opacity-90 flex items-center gap-1 transition-colors">
+                            <span class="material-symbols-outlined text-[16px]">file_download</span> Excel
+                        </button>
+                    </div>
+                `;
+                    container.appendChild(card);
+                });
+            }
+
+            function applyFilters() {
+                const typeFilter = document.getElementById('filter-type').value;
+                
+                let filtered = allReports;
+                
+                if (typeFilter !== 'all') {
+                    filtered = filtered.filter(r => r.report_type === typeFilter);
+                }
+                
+                renderReports(filtered);
+            }
+
+            document.getElementById('filter-type').addEventListener('change', applyFilters);
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(event) {
+                const dropdown = document.getElementById('report-type-dropdown');
+                const button = dropdown.previousElementSibling;
+                if (!button.contains(event.target) && !dropdown.contains(event.target)) {
+                    dropdown.classList.add('hidden');
+                }
+            });
+
+            function openGenerateModal(type) {
+                document.getElementById('report-type-dropdown').classList.add('hidden');
+                
+                const typeTextMap = {
+                    'Daily': 'ประจำวัน',
+                    'Weekly': 'ประจำสัปดาห์',
+                    'Monthly': 'ประจำเดือน'
+                };
+                
+                document.getElementById('modal-report-type-text').innerText = typeTextMap[type] || '';
+                document.getElementById('report-type-input').value = type;
+                
+                const inputEl = document.getElementById('report-date-input');
+                const labelEl = document.getElementById('modal-date-label');
+                const hintEl = document.getElementById('modal-date-hint');
+                
+                if (type === 'Daily') {
+                    labelEl.innerText = 'เลือกวันที่ต้องการสรุป';
+                    inputEl.type = 'date';
+                    hintEl.innerText = 'ไฟล์จะถูกตั้งชื่อในรูปแบบ วันที่_เดือน_ปี อัตโนมัติ';
+                } else if (type === 'Weekly') {
+                    labelEl.innerText = 'เลือกสัปดาห์ที่ต้องการสรุป';
+                    inputEl.type = 'week';
+                    hintEl.innerText = 'ไฟล์จะถูกตั้งชื่อในรูปแบบ สัปดาห์ที่_ปี อัตโนมัติ';
+                } else {
+                    labelEl.innerText = 'เลือกเดือนที่ต้องการสรุป';
+                    inputEl.type = 'month';
+                    hintEl.innerText = 'ไฟล์จะถูกตั้งชื่อในรูปแบบ เดือน_ปี อัตโนมัติ';
+                }
+                
+                inputEl.value = ''; // Reset input
+                document.getElementById('generate-modal').classList.remove('hidden');
+            }
+
+            async function deleteReport(id) {
+                if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายงานนี้?')) return;
+                
+                try {
+                    const res = await fetch('api/delete_report.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: id })
+                    });
+                    
+                    const data = await res.json();
+                    if (data.success) {
+                        // Remove from allReports array
+                        allReports = allReports.filter(r => r.id !== id);
+                        applyFilters(); // Re-render
+                    } else {
+                        alert('เกิดข้อผิดพลาดในการลบรายงาน: ' + (data.error || 'Unknown error'));
+                    }
+                } catch (err) {
+                    console.error("Delete failed", err);
+                    alert('ไม่สามารถลบรายงานได้');
+                }
+            }
+
             (async () => {
                 try {
                     const res = await fetch('api/reports.php');
                     if (res.ok) {
-                        const reports = await res.json();
-                        const container = document.getElementById('reports-container');
-                        container.innerHTML = ''; // clear loading
-
-                        if (reports.length === 0) {
-                            container.innerHTML = `<div class="text-sm text-on-surface-variant col-span-full text-center py-8">ไม่พบรายงาน</div>`;
-                            return;
-                        }
-
-                        reports.forEach(r => {
-                            const date = new Date(r.created_at).toLocaleDateString('th-TH');
-                            const card = document.createElement('div');
-                            card.className = "bg-surface rounded-2xl border border-outline-variant shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow";
-
-                            let badgeClass = "bg-surface-container-low text-on-surface-variant";
-                            if (r.report_type === 'Weekly') badgeClass = "bg-primary/20 text-on-surface font-medium";
-
-                            card.innerHTML = `
-                            <div class="p-space-md border-b border-surface-container">
-                                <div class="flex items-start justify-between mb-2">
-                                    <span class="px-2 py-1 ${badgeClass} text-xs rounded-md">${r.report_type} Report</span>
-                                    <span class="text-xs text-on-surface-variant">${date}</span>
-                                </div>
-                                <h3 class="text-base font-semibold text-on-surface">${r.report_name}</h3>
-                            </div>
-                            <div class="p-space-sm flex items-center gap-2 justify-end bg-surface-container-lowest rounded-b-2xl">
-                                <button onclick="window.location.href='export_pdf.php?id=${r.id}'" class="px-3 py-1.5 rounded-lg bg-surface text-on-surface border border-outline-variant text-xs font-medium hover:bg-surface-container-low flex items-center gap-1 transition-colors">
-                                    <span class="material-symbols-outlined text-[16px] text-error">picture_as_pdf</span> PDF
-                                </button>
-                                <button onclick="window.location.href='export_excel.php?id=${r.id}'" class="px-3 py-1.5 rounded-lg bg-primary text-on-primary text-xs font-semibold hover:opacity-90 flex items-center gap-1 transition-colors">
-                                    <span class="material-symbols-outlined text-[16px]">file_download</span> Excel
-                                </button>
-                            </div>
-                        `;
-                            container.appendChild(card);
-                        });
+                        allReports = await res.json();
+                        applyFilters();
                     }
                 } catch (err) {
                     console.error("Failed to load reports", err);

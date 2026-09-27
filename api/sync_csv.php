@@ -12,7 +12,28 @@ if (!file_exists($file_path)) {
 
 try {
     $file = fopen($file_path, "r");
-    fgetcsv($file); // ข้ามบรรทัดแรก (Header)
+    $headers = fgetcsv($file);
+    if (!$headers) {
+        throw new Exception("ไฟล์ CSV ว่างเปล่าหรืออ่านไม่ได้");
+    }
+    
+    // Clean headers (remove BOM, quotes, whitespace)
+    $headers = array_map(function($h) {
+        return trim(str_replace(['"', "\xEF\xBB\xBF", "'"], '', $h));
+    }, $headers);
+    
+    // Create column map (Header Name -> Index)
+    $hMap = array_flip($headers);
+    
+    // Resolve indexes with fallback to original 8-column format if headers don't match
+    $idx_sku = $hMap['sku'] ?? 0;
+    $idx_date = $hMap['sale_date'] ?? 1;
+    $idx_prod = $hMap['product_name'] ?? 2;
+    $idx_branch = $hMap['branch'] ?? 3;
+    $idx_region = $hMap['region'] ?? 4;
+    $idx_qty = $hMap['quantity'] ?? 5;
+    $idx_price = $hMap['unit_price'] ?? 6;
+    $idx_total = $hMap['total_price'] ?? 7;
 
     // เริ่ม Transaction เพื่อให้ Insert ข้อมูลหลักร้อย/พันบรรทัดได้ไวขึ้น
     $pdo->beginTransaction();
@@ -30,34 +51,103 @@ try {
         }
     }
 
-    // เตรียมคำสั่ง SQL (เพิ่มคอลัมน์ category)
-    $stmt = $pdo->prepare("INSERT INTO sales_data (sale_date, product_name, category, branch, region, quantity, unit_price, total_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    // Insert import log FIRST to get import_id
+    $stmt_log = $pdo->prepare("INSERT INTO data_imports (user_id, file_name, source_type, import_status) VALUES (1, 'sales_data.csv', 'CSV', 'processing')");
+    $stmt_log->execute();
+    $import_id = $pdo->lastInsertId();
+
+    // Cache products and branches
+    $products = [];
+    foreach ($pdo->query("SELECT product_id, product_code FROM products")->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $products[$row['product_code']] = $row['product_id'];
+    }
+
+    $branches = [];
+    foreach ($pdo->query("SELECT branch_id, branch_name FROM branches")->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $branches[$row['branch_name']] = $row['branch_id'];
+    }
+
+    // Prepare Inserts and Updates
+    $stmt_prod = $pdo->prepare("INSERT INTO products (product_code, product_name, category, unit_price) VALUES (?, ?, ?, ?)");
+    $stmt_prod_update = $pdo->prepare("UPDATE products SET product_name = ?, category = ?, unit_price = ? WHERE product_code = ?");
+    
+    $stmt_branch = $pdo->prepare("INSERT INTO branches (branch_code, branch_name, region, province) VALUES (?, ?, ?, ?)");
+    $stmt_branch_update = $pdo->prepare("UPDATE branches SET region = ? WHERE branch_name = ?");
+    
+    $stmt = $pdo->prepare("
+        INSERT INTO sales_data (
+            import_id, product_id, branch_id, sku, sale_date, product_name, category, branch, region, 
+            quantity, unit_price, discount_percent, discount_amount, customer_type, payment_method, total_price
+        ) VALUES (
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, 
+            ?, ?, ?, ?, ?, ?, ?
+        )
+    ");
 
     $count = 0;
     while (($data = fgetcsv($file, 1000, ",")) !== FALSE) {
-        // เช็คว่ามีข้อมูลครบ 8 คอลัมน์ (รวม sku)
-        if (count($data) >= 8) {
-            $sku = $data[0];
-            $category = getCategoryFromSKU($sku);
+        // Skip empty rows
+        if (count($data) < 2) continue;
+        
+        $sku = isset($data[$idx_sku]) ? trim($data[$idx_sku]) : '';
+        $sale_date = isset($data[$idx_date]) ? trim($data[$idx_date]) : '';
+        $product_name = isset($data[$idx_prod]) ? trim($data[$idx_prod]) : '';
+        $branch = isset($data[$idx_branch]) ? trim($data[$idx_branch]) : '';
+        $region = isset($data[$idx_region]) ? trim($data[$idx_region]) : '';
+        $quantity = isset($data[$idx_qty]) ? (float)$data[$idx_qty] : 0;
+        $unit_price = isset($data[$idx_price]) ? (float)$data[$idx_price] : 0;
+        $total_price = isset($data[$idx_total]) ? (float)$data[$idx_total] : 0;
+        
+        // Skip invalid rows
+        if (empty($sku) || empty($sale_date)) continue;
+        
+        $category = getCategoryFromSKU($sku);
+
+            // Handle Product
+            if (!isset($products[$sku])) {
+                $stmt_prod->execute([$sku, $product_name, $category, $unit_price]);
+                $products[$sku] = $pdo->lastInsertId();
+            } else {
+                // Update existing product info (name, category, price)
+                $stmt_prod_update->execute([$product_name, $category, $unit_price, $sku]);
+            }
+            $product_id = $products[$sku];
+
+            // Handle Branch
+            if (!isset($branches[$branch])) {
+                $bcode = 'B' . str_pad(count($branches) + 1, 3, '0', STR_PAD_LEFT);
+                $stmt_branch->execute([$bcode, $branch, $region, '']);
+                $branches[$branch] = $pdo->lastInsertId();
+            } else {
+                // Update existing branch info (region)
+                $stmt_branch_update->execute([$region, $branch]);
+            }
+            $branch_id = $branches[$branch];
+
+            // Calculate Discounts
+            $expected_total = $quantity * $unit_price;
+            $discount_amount = max(0, $expected_total - $total_price);
+            $discount_percent = ($expected_total > 0) ? ($discount_amount / $expected_total) * 100 : 0;
+
+            // Mock Customer & Payment
+            $customer_type = (rand(0, 1) == 0) ? 'ทั่วไป' : 'สมาชิก';
+            $payments = ['เงินสด', 'โอนเงิน', 'บัตรเครดิต'];
+            $payment_method = $payments[array_rand($payments)];
             
             $stmt->execute([
-                $data[1], $data[2], $category, $data[3], $data[4], $data[5], $data[6], $data[7]
+                $import_id, $product_id, $branch_id, $sku, $sale_date, $product_name, $category, $branch, $region,
+                $quantity, $unit_price, $discount_percent, $discount_amount, $customer_type, $payment_method, $total_price
             ]);
             $count++;
         }
-    }
+
 
     $pdo->commit();
     fclose($file);
 
-    // --- Start Insert into data_imports (Log) ---
-    try {
-        $stmt_log = $pdo->prepare("INSERT INTO data_imports (user_id, file_name, source_type, total_rows, success_rows, error_rows, import_status) VALUES (1, 'sales_data.csv', 'CSV Upload', ?, ?, 0, 'completed')");
-        $stmt_log->execute([$count, $count]);
-    } catch (Exception $e) {
-        // ข้าม Error กรณีไม่สามารถบันทึก Log ได้
-    }
-    // --- End Insert into data_imports (Log) ---
+    // Update Import Log
+    $stmt_update_log = $pdo->prepare("UPDATE data_imports SET total_rows = ?, success_rows = ?, import_status = 'completed' WHERE import_id = ?");
+    $stmt_update_log->execute([$count, $count, $import_id]);
 
     // --- Start AI Auto-Insight Generation ---
     try {
@@ -125,6 +215,11 @@ try {
                         $insight['related_branch'] ?? 'ทุกสาขา',
                         $insight['ai_confidence'] ?? 95.00
                     ]);
+                    $insight_id = $pdo->lastInsertId();
+                    
+                    // Add Notification for AI Insight
+                    $stmt_notif_ai = $pdo->prepare("INSERT INTO notifications (user_id, notification_type, title, message) VALUES (1, 'other', ?, ?)");
+                    $stmt_notif_ai->execute(["✨ AI Insight ใหม่: " . $insight['title'], "AI ตรวจพบข้อมูลเชิงลึกใหม่: " . ($insight['description'] ?? '')]);
                 }
             }
         }
@@ -132,6 +227,13 @@ try {
         // ให้ข้าม Error ไป เพื่อไม่ให้กระทบกับการทำงานหลักของ Sync
     }
     // --- End AI Auto-Insight Generation ---
+    
+    // --- Start Notification Generation ---
+    try {
+        $stmt_notif = $pdo->prepare("INSERT INTO notifications (user_id, notification_type, title, message, reference_id) VALUES (1, 'analysis_completed', 'นำเข้าข้อมูลสำเร็จ', ?, ?)");
+        $stmt_notif->execute(["อัปเดตข้อมูลการขายจำนวน {$count} รายการ เรียบร้อยแล้ว", $import_id]);
+    } catch (Exception $e) {}
+    // --- End Notification Generation ---
 
     echo json_encode(["status" => "success", "message" => "Sync ข้อมูลสำเร็จ! พร้อมสร้าง AI Insights เรียบร้อยแล้ว (นำเข้าทั้งหมด {$count} รายการ)"]);
 
@@ -139,6 +241,21 @@ try {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }
+    
+    // Add Error Notification
+    try {
+        if (isset($import_id)) {
+            $stmt_update_log = $pdo->prepare("UPDATE data_imports SET import_status = 'failed', error_message = ? WHERE import_id = ?");
+            $stmt_update_log->execute([$e->getMessage(), $import_id]);
+            
+            $stmt_notif = $pdo->prepare("INSERT INTO notifications (user_id, notification_type, title, message, reference_id) VALUES (1, 'data_error', 'การนำเข้าข้อมูลล้มเหลว', ?, ?)");
+            $stmt_notif->execute(["พบข้อผิดพลาด: " . $e->getMessage(), $import_id]);
+        } else {
+            $stmt_notif = $pdo->prepare("INSERT INTO notifications (user_id, notification_type, title, message) VALUES (1, 'data_error', 'การนำเข้าข้อมูลล้มเหลว', ?)");
+            $stmt_notif->execute(["พบข้อผิดพลาดก่อนนำเข้า: " . $e->getMessage()]);
+        }
+    } catch (Exception $ex) {}
+
     echo json_encode(["status" => "error", "message" => "Database Error: " . $e->getMessage()]);
 }
 ?>

@@ -1,11 +1,9 @@
 <?php
 require 'api/db.php';
-$stmt = $pdo->query("SHOW TABLES");
-$tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
-foreach ($tables as $table) {
-    echo "Table: $table\n";
-    $stmt2 = $pdo->query("SHOW CREATE TABLE `$table`");
-    $create = $stmt2->fetch(PDO::FETCH_ASSOC);
-    echo $create['Create Table'] . "\n\n";
+$tables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
+$result = [];
+foreach($tables as $t) {
+    $result[$t] = $pdo->query("DESCRIBE `$t`")->fetchAll(PDO::FETCH_ASSOC);
 }
-?>
+file_put_contents('schema.json', json_encode($result));
+echo "Done";

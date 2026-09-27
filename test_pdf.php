@@ -1,21 +1,4 @@
 <?php
-require 'vendor/autoload.php';
-
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Pdf\Mpdf;
-
-$spreadsheet = new Spreadsheet();
-$spreadsheet->getDefaultStyle()->getFont()->setName('Garuda');
-$sheet = $spreadsheet->getActiveSheet();
-$sheet->setCellValue('A1', 'ทดสอบภาษาไทย');
-
-try {
-    $class = \PhpOffice\PhpSpreadsheet\Writer\Pdf\Mpdf::class;
-    \PhpOffice\PhpSpreadsheet\IOFactory::registerWriter('Pdf', $class);
-    $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Pdf');
-    $writer->save('test_thai.pdf');
-    echo "PDF Created successfully.\n";
-} catch (Exception $e) {
-    echo "Error: " . $e->getMessage();
-}
-?>
+$out = shell_exec('C:\laragon\bin\php\php-8.1.10\php.exe c:\laragon\www\NEXUS-AI-ANALYTICS\export_pdf.php 2>&1');
+file_put_contents('test_pdf_out.txt', $out);
+echo "Done";

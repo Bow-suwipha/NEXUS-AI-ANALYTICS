@@ -45,18 +45,6 @@
                             class="period-tab px-3 py-1 rounded-lg text-xs text-on-surface-variant hover:text-on-surface transition-all"
                             type="button">ไตรมาสนี้</button>
                     </div>
-                    <button onclick="window.location.href='export_pdf.php'"
-                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-container-lowest border border-outline-variant text-on-surface text-xs font-medium hover:bg-surface-container-low transition-colors"
-                        type="button">
-                        <span class="material-symbols-outlined text-[16px] text-error">picture_as_pdf</span>
-                        <span>PDF</span>
-                    </button>
-                    <button onclick="window.location.href='export_excel'"
-                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-container-lowest border border-outline-variant text-on-surface text-xs font-medium hover:bg-surface-container-low transition-colors"
-                        type="button">
-                        <span class="material-symbols-outlined text-[16px] text-primary">table_view</span>
-                        <span>Excel</span>
-                    </button>
                 </div>
             </div>
 
@@ -169,17 +157,8 @@
                     class="lg:col-span-7 flex flex-col space-y-4 p-6 rounded-2xl bg-surface border border-outline-variant shadow-sm">
                     <div class="flex items-center justify-between pb-1">
                         <div>
-                            <h2 class="text-base text-on-surface font-semibold">ยอดขายรายเดือน</h2>
-                            <p class="text-xs text-on-surface-variant">แนวโน้มรายเดือนตั้งแต่ต้นปี 2569</p>
-                        </div>
-                        <div
-                            class="flex items-center p-0.5 rounded-xl bg-surface-container text-xs border border-outline-variant">
-                            <button
-                                class="px-2.5 py-1 rounded-lg text-on-surface-variant hover:text-on-surface">รายสัปดาห์</button>
-                            <button
-                                class="px-2.5 py-1 rounded-lg bg-surface text-primary font-semibold shadow-sm">รายเดือน</button>
-                            <button
-                                class="px-2.5 py-1 rounded-lg text-on-surface-variant hover:text-on-surface">รายไตรมาส</button>
+                            <h2 id="chart-title" class="text-base text-on-surface font-semibold">ยอดขายรายเดือน</h2>
+                            <p id="chart-subtitle" class="text-xs text-on-surface-variant">แนวโน้มรายเดือน</p>
                         </div>
                     </div>
                     <div
@@ -268,8 +247,8 @@
                             <span class="material-symbols-outlined text-[16px]">search_insights</span>
                             <span>วิเคราะห์เพิ่มเติม</span>
                         </button>
-                        <button onclick="window.location.href='export_excel'"
-                            class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-semibold transition-all border border-outline-variant"
+                        <button data-export-url="export_excel.php" data-export-type="excel"
+                            class="btn-export flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-semibold transition-all border border-outline-variant"
                             type="button">
                             <span class="material-symbols-outlined text-[16px]">summarize</span>
                             <span>สร้างรายงาน</span>
@@ -441,6 +420,14 @@
                         const text = e.target.innerText.trim();
                         const periodMap = { 'วันนี้': 'today', 'สัปดาห์นี้': 'week', 'เดือนนี้': 'month', 'ไตรมาสนี้': 'quarter' };
                         const period = periodMap[text] || 'month';
+                        
+                        // Update the chart title based on period
+                        const titleMap = { 'today': 'ยอดขายวันนี้', 'week': 'ยอดขายรายสัปดาห์', 'month': 'ยอดขายรายเดือน', 'quarter': 'ยอดขายรายไตรมาส' };
+                        const subTitleMap = { 'today': 'แนวโน้มวันนี้', 'week': 'แนวโน้มรายสัปดาห์', 'month': 'แนวโน้มรายเดือน', 'quarter': 'แนวโน้มรายไตรมาส' };
+                        
+                        document.getElementById('chart-title').innerText = titleMap[period] || 'ยอดขาย';
+                        document.getElementById('chart-subtitle').innerText = subTitleMap[period] || 'แนวโน้ม';
+
                         loadKPIData(period);
                     });
                 });

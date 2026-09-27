@@ -34,12 +34,13 @@ if (isset($_GET['id'])) {
     $stmt->execute([$reportId]);
     $report = $stmt->fetch();
     
-    if ($report && $report['period_start'] && $report['period_end']) {
+    if ($report && isset($report['period_start']) && isset($report['period_end'])) {
         $reportName = $report['report_name'];
         $stmt = $pdo->prepare("SELECT sale_date, product_name, category, branch, quantity, total_price FROM sales_data WHERE sale_date BETWEEN ? AND ? ORDER BY sale_date ASC");
         $stmt->execute([$report['period_start'], $report['period_end']]);
         $sales = $stmt->fetchAll();
     } else {
+        if ($report) $reportName = $report['report_name'];
         $stmt = $pdo->query("SELECT sale_date, product_name, category, branch, quantity, total_price FROM sales_data ORDER BY sale_date DESC LIMIT 100");
         $sales = $stmt->fetchAll();
     }

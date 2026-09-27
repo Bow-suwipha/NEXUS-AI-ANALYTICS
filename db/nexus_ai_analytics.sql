@@ -718,10 +718,10 @@ CREATE TABLE `system_settings` (
 --
 
 INSERT INTO `system_settings` (`id`, `user_id`, `groq_api_key`, `alert_anomaly`, `alert_weekly_summary`, `fullname`, `email`, `role`) VALUES
-(1, 1, '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', 1, 0, NULL, NULL, NULL),
-(2, 2, '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', 1, 0, NULL, NULL, NULL),
-(3, 3, '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', 0, 0, NULL, NULL, NULL),
-(4, 4, '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', 1, 0, NULL, NULL, NULL);
+(1, 1, 'YOUR_GROQ_API_KEY_HERE', 1, 0, NULL, NULL, NULL),
+(2, 2, 'YOUR_GROQ_API_KEY_HERE', 1, 0, NULL, NULL, NULL),
+(3, 3, 'YOUR_GROQ_API_KEY_HERE', 0, 0, NULL, NULL, NULL),
+(4, 4, 'YOUR_GROQ_API_KEY_HERE', 1, 0, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 

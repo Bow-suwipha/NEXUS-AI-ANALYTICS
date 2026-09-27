@@ -145,34 +145,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Centralized Export
     document.body.addEventListener('click', (e) => {
-        const btn = e.target.closest('button');
-        if (!btn || !btn.innerText.match(/Excel|PDF/)) return;
+        const btn = e.target.closest('.btn-export');
+        if (!btn) return;
         if (btn.classList.contains('exporting')) return;
+
+        e.preventDefault();
+
+        const exportUrl = btn.getAttribute('data-export-url');
+        if (!exportUrl) return;
 
         btn.classList.add('exporting');
         const originalHtml = btn.innerHTML;
         btn.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin">sync</span> โหลด...`;
 
-        const type = btn.innerText.includes('Excel') ? 'excel' : 'pdf';
-        const ext = type === 'excel' ? 'xlsx' : 'pdf';
+        // Use direct navigation for reliable downloads
+        window.location.href = exportUrl;
 
-        fetch(`export_${type}`)
-            .then(res => res.blob())
-            .then(blob => {
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `Nexus_AI_Summary.${ext}`;
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-            })
-            .finally(() => {
-                setTimeout(() => {
-                    btn.innerHTML = originalHtml;
-                    btn.classList.remove('exporting');
-                }, 500);
-            });
+        // Reset button after a short delay
+        setTimeout(() => {
+            btn.innerHTML = originalHtml;
+            btn.classList.remove('exporting');
+        }, 2000);
     });
 
     checkAuth();
@@ -196,5 +189,86 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         loadComponent("footer-placeholder", "footer.html");
         isInitialLoad = false;
+        
+        // Start polling notifications periodically
+        fetchNotifications();
+        setInterval(fetchNotifications, 60000); // Poll every minute
+    }
+});
+
+// --- Notifications Logic ---
+window.toggleNotifications = function() {
+    const dropdown = document.getElementById('nav-notif-dropdown');
+    if (dropdown) {
+        dropdown.classList.toggle('hidden');
+        if (!dropdown.classList.contains('hidden')) {
+            fetchNotifications();
+        }
+    }
+};
+
+window.fetchNotifications = async function() {
+    try {
+        const res = await fetch('api/notifications.php');
+        const data = await res.json();
+        
+        const badge = document.getElementById('nav-notif-badge');
+        if (badge) {
+            if (data.unread_count > 0) badge.classList.remove('hidden');
+            else badge.classList.add('hidden');
+        }
+        
+        const list = document.getElementById('nav-notif-list');
+        if (list && data.notifications) {
+            if (data.notifications.length === 0) {
+                list.innerHTML = `<div class="p-4 text-center text-sm text-on-surface-variant">ไม่มีการแจ้งเตือนใหม่</div>`;
+                return;
+            }
+            
+            list.innerHTML = data.notifications.map(n => {
+                const isUnread = n.is_read == 0;
+                const bgClass = isUnread ? 'bg-primary/5' : 'bg-transparent';
+                const dot = isUnread ? `<span class="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-1.5"></span>` : `<span class="w-2 h-2 flex-shrink-0"></span>`;
+                
+                let icon = 'notifications';
+                let iconColor = 'text-primary';
+                if (n.notification_type === 'data_error') { icon = 'error'; iconColor = 'text-error'; }
+                else if (n.notification_type === 'analysis_completed') { icon = 'check_circle'; iconColor = 'text-emerald-500'; }
+                
+                return `
+                <div class="p-3 border-b border-outline-variant flex gap-3 hover:bg-surface-container transition-colors ${bgClass}">
+                    ${dot}
+                    <div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center flex-shrink-0">
+                        <span class="material-symbols-outlined text-[18px] ${iconColor}">${icon}</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-sm font-semibold text-on-surface truncate">${n.title}</h4>
+                        <p class="text-xs text-on-surface-variant mt-0.5 line-clamp-2">${n.message}</p>
+                        <span class="text-[10px] text-on-surface-variant mt-1 block">${new Date(n.created_at).toLocaleString('th-TH')}</span>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+    } catch (err) {
+        console.error("Error fetching notifications", err);
+    }
+};
+
+window.markNotificationsRead = async function() {
+    try {
+        await fetch('api/notifications.php', { method: 'POST' });
+        fetchNotifications();
+    } catch (err) {
+        console.error(err);
+    }
+};
+
+// Close notifications when clicking outside
+document.addEventListener('click', function(e) {
+    const btn = document.getElementById('nav-btn-notification');
+    const dropdown = document.getElementById('nav-notif-dropdown');
+    if (btn && dropdown && !btn.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.add('hidden');
     }
 });

@@ -8,6 +8,8 @@ if ($period === 'today') {
     $startDate = $endDate;
 } elseif ($period === 'week') {
     $startDate = date('Y-m-d', strtotime('-7 days'));
+} elseif ($period === 'quarter') {
+    $startDate = date('Y-m-d', strtotime('-3 months'));
 } elseif ($period === 'year') {
     $startDate = date('Y-m-d', strtotime('-1 year'));
 } else {

@@ -27,7 +27,67 @@ foreach($branches as $b) {
     $summary .= "สาขา " . $b['branch'] . ": " . round($b['r'], 2) . " บาท, ";
 }
 
-$context = "ข้อมูลปัจจุบัน: ยอดขายรวมของบริษัทคือ $total บาท\nยอดขายแต่ละสาขาคือ: $summary\nสินค้าหลักคือ น้ำดื่มบริสุทธิ์ 600ml, ชาเขียว รสต้นตำรับ 500ml";
+// ดึงข้อมูลยอดขายแยกตามสินค้า (Top 15) เพื่อประหยัด Token
+$stmt = $pdo->query("SELECT product_name, SUM(quantity) as qty, SUM(total_price) as r FROM sales_data GROUP BY product_name ORDER BY r DESC LIMIT 15");
+$products = $stmt->fetchAll();
+$prod_summary = "";
+foreach($products as $p) {
+    $prod_summary .= $p['product_name'] . " (" . round($p['r'], 2) . " บาท / " . $p['qty'] . " ชิ้น), ";
+}
+
+// ดึงข้อมูลยอดขายสินค้า Top 3 แยกตามสาขา
+$branch_prod_summary = "";
+foreach($branches as $b) {
+    $b_name = $b['branch'];
+    $stmt_bp = $pdo->prepare("SELECT product_name, SUM(total_price) as r FROM sales_data WHERE branch = ? GROUP BY product_name ORDER BY r DESC LIMIT 3");
+    $stmt_bp->execute([$b_name]);
+    $bps = $stmt_bp->fetchAll();
+    
+    $items = [];
+    foreach($bps as $bp) {
+        $items[] = $bp['product_name'] . " (" . round($bp['r'], 2) . "บ.)";
+    }
+    $branch_prod_summary .= $b_name . ": " . implode(", ", $items) . " | ";
+}
+
+// ดึงข้อมูลยอดขายสินค้า Top 3 แยกตามหมวดหมู่
+$cat_prod_summary = "";
+$stmt_cats = $pdo->query("SELECT DISTINCT category FROM sales_data");
+$categories = $stmt_cats->fetchAll(PDO::FETCH_COLUMN);
+foreach($categories as $cat) {
+    $stmt_cp = $pdo->prepare("SELECT product_name, SUM(total_price) as r FROM sales_data WHERE category = ? GROUP BY product_name ORDER BY r DESC LIMIT 3");
+    $stmt_cp->execute([$cat]);
+    $cps = $stmt_cp->fetchAll();
+    
+    $items = [];
+    foreach($cps as $cp) {
+        $items[] = $cp['product_name'] . " (" . round($cp['r'], 2) . "บ.)";
+    }
+    $cat_prod_summary .= $cat . ": " . implode(", ", $items) . " | ";
+}
+
+// ดึงข้อมูลยอดขายเดือนนี้
+$currentMonthStr = date('Y-m');
+$stmt_month = $pdo->prepare("SELECT SUM(total_price) as t FROM sales_data WHERE DATE_FORMAT(sale_date, '%Y-%m') = ?");
+$stmt_month->execute([$currentMonthStr]);
+$totalThisMonth = $stmt_month->fetch()['t'] ?? 0;
+
+$stmt_month_branches = $pdo->prepare("SELECT branch, SUM(total_price) as r FROM sales_data WHERE DATE_FORMAT(sale_date, '%Y-%m') = ? GROUP BY branch");
+$stmt_month_branches->execute([$currentMonthStr]);
+$branchesThisMonth = $stmt_month_branches->fetchAll();
+$summaryThisMonth = "";
+foreach($branchesThisMonth as $b) {
+    $summaryThisMonth .= "สาขา " . $b['branch'] . ": " . round($b['r'], 2) . " บาท, ";
+}
+
+$context = "ข้อมูลปัจจุบัน(วันที่ " . date('Y-m-d') . "): 
+ยอดขายรวมตั้งแต่เริ่มต้นคือ $total บาท
+ยอดขายสะสมแต่ละสาขาคือ: $summary
+ยอดขายรวมเดือนนี้คือ $totalThisMonth บาท
+ยอดขายเดือนนี้แต่ละสาขา: $summaryThisMonth
+ยอดขายสินค้ายอดนิยม 15 อันดับแรก(รวมทุกสาขา): $prod_summary
+สินค้าขายดีที่สุดในแต่ละสาขา(Top 3): $branch_prod_summary
+สินค้าขายดีที่สุดในแต่ละหมวดหมู่(Top 3): $cat_prod_summary";
 
 $messages = [
     [
