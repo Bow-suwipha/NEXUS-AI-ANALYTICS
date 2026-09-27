@@ -6,11 +6,6 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 
-
-} catch (\PDOException $e) {
-    die("Database connection failed: " . $e->getMessage());
-}
-
 // Fetch Data
 $sales = [];
 $reportName = "sales_report";
