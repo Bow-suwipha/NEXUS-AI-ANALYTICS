@@ -27,9 +27,8 @@ if (!$userId && isset($_SESSION['user_id'])) {
 }
 
 if (!$userId) {
-    http_response_code(401);
-    echo json_encode(["status" => "error", "message" => "Unauthorized"]);
-    exit;
+    // Default to admin user for local dashboard
+    $userId = 1;
 }
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -85,11 +84,11 @@ if ($method === 'GET') {
     $existing = $stmt->fetch();
     
     if ($existing) {
-        $stmtSettings = $pdo->prepare("UPDATE system_settings SET groq_api_key = ?, model_name = ?, refresh_interval = ?, alert_anomaly = ?, alert_weekly_summary = ? WHERE id = ?");
-        $stmtSettings->execute([$apiKey, $modelName, $interval, $alertAnomaly, $alertWeekly, $existing['id']]);
+        $stmtSettings = $pdo->prepare("UPDATE system_settings SET groq_api_key = ?, alert_anomaly = ?, alert_weekly_summary = ? WHERE id = ?");
+        $stmtSettings->execute([$apiKey, $alertAnomaly, $alertWeekly, $existing['id']]);
     } else {
-        $stmtSettings = $pdo->prepare("INSERT INTO system_settings (user_id, groq_api_key, model_name, refresh_interval, alert_anomaly, alert_weekly_summary) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmtSettings->execute([$userId, $apiKey, $modelName, $interval, $alertAnomaly, $alertWeekly]);
+        $stmtSettings = $pdo->prepare("INSERT INTO system_settings (user_id, groq_api_key, alert_anomaly, alert_weekly_summary) VALUES (?, ?, ?, ?)");
+        $stmtSettings->execute([$userId, $apiKey, $alertAnomaly, $alertWeekly]);
     }
     
     echo json_encode(["status" => "success", "message" => "Settings updated successfully"]);

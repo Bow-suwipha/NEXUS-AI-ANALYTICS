@@ -1,0 +1,4 @@
+*.sql
+db/*.sql
+.env
+
