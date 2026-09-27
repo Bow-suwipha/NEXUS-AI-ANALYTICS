@@ -114,10 +114,137 @@ document.addEventListener("DOMContentLoaded", () => {
         loadComponent("footer-placeholder", "footer.html");
 
         // Notification polling
+        // Notification polling
         fetchNotifications();
         setInterval(fetchNotifications, 60000);
     }
+    
+    // Initialize custom dropdowns
+    if (window.initCustomSelects) {
+        window.initCustomSelects();
+    }
 });
+
+// ─────────────────────────────────────────────
+// UI Utilities
+// ─────────────────────────────────────────────
+window.initCustomSelects = function () {
+    const selects = document.querySelectorAll('select:not(.customized)');
+    selects.forEach(select => {
+        select.classList.add('customized');
+        
+        // Ensure parent is relative if we are appending absolute things, but wrapper handles it
+        select.style.display = 'none';
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'relative w-full text-left inline-block';
+        
+        const trigger = document.createElement('button');
+        trigger.type = 'button';
+        // Copy some classes from original select if needed, or use default beautiful ones
+        trigger.className = 'w-full bg-surface-container-low border border-outline-variant text-sm text-on-surface py-2 px-3 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors flex items-center justify-between shadow-sm';
+        
+        const selectedText = document.createElement('span');
+        selectedText.className = 'truncate';
+        selectedText.innerText = select.options[select.selectedIndex]?.text || 'Select...';
+        
+        const chevron = document.createElement('span');
+        chevron.className = 'material-symbols-outlined text-[18px] text-on-surface-variant pointer-events-none transition-transform duration-200';
+        chevron.innerText = 'expand_more';
+        
+        trigger.appendChild(selectedText);
+        trigger.appendChild(chevron);
+        
+        const dropdown = document.createElement('ul');
+        dropdown.className = 'absolute z-50 mt-1 w-full bg-surface border border-outline-variant rounded-xl shadow-lg hidden overflow-hidden max-h-60 overflow-y-auto transform opacity-0 scale-95 transition-all duration-200 origin-top';
+        
+        Array.from(select.options).forEach((opt, idx) => {
+            const li = document.createElement('li');
+            li.className = 'px-3 py-2 text-sm text-on-surface hover:bg-primary/10 cursor-pointer transition-colors flex items-center justify-between';
+            if (idx === select.selectedIndex) {
+                li.classList.add('bg-primary/5', 'font-medium', 'text-primary');
+            }
+            li.innerText = opt.text;
+            
+            li.addEventListener('click', (e) => {
+                e.stopPropagation();
+                select.selectedIndex = idx;
+                select.dispatchEvent(new Event('change'));
+                selectedText.innerText = opt.text;
+                
+                Array.from(dropdown.children).forEach(child => child.className = 'px-3 py-2 text-sm text-on-surface hover:bg-primary/10 cursor-pointer transition-colors flex items-center justify-between');
+                li.className = 'px-3 py-2 text-sm text-primary bg-primary/5 font-medium cursor-pointer transition-colors flex items-center justify-between';
+                
+                closeDropdown();
+            });
+            dropdown.appendChild(li);
+        });
+        
+        wrapper.appendChild(trigger);
+        wrapper.appendChild(dropdown);
+        
+        select.parentNode.insertBefore(wrapper, select.nextSibling);
+        
+        let isOpen = false;
+        
+        const openDropdown = () => {
+            isOpen = true;
+            wrapper.style.zIndex = '50';
+            dropdown.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                dropdown.classList.remove('opacity-0', 'scale-95');
+                dropdown.classList.add('opacity-100', 'scale-100');
+                chevron.style.transform = 'rotate(180deg)';
+                trigger.classList.add('border-primary', 'ring-1', 'ring-primary');
+            });
+        };
+        
+        const closeDropdown = () => {
+            isOpen = false;
+            wrapper.style.zIndex = '';
+            dropdown.classList.remove('opacity-100', 'scale-100');
+            dropdown.classList.add('opacity-0', 'scale-95');
+            chevron.style.transform = 'rotate(0deg)';
+            trigger.classList.remove('border-primary', 'ring-1', 'ring-primary');
+            setTimeout(() => {
+                if (!isOpen) dropdown.classList.add('hidden');
+            }, 200);
+        };
+        
+        trigger.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (isOpen) closeDropdown();
+            else {
+                // Close all other custom selects
+                document.dispatchEvent(new CustomEvent('close-all-selects'));
+                openDropdown();
+            }
+        });
+        
+        document.addEventListener('close-all-selects', () => {
+            if (isOpen) closeDropdown();
+        });
+
+        document.addEventListener('click', (e) => {
+            if (isOpen && !wrapper.contains(e.target)) {
+                closeDropdown();
+            }
+        });
+        
+        // Listen for programmatic changes to original select
+        select.addEventListener('change', () => {
+            selectedText.innerText = select.options[select.selectedIndex]?.text || '';
+            Array.from(dropdown.children).forEach((child, idx) => {
+                if (idx === select.selectedIndex) {
+                    child.className = 'px-3 py-2 text-sm text-primary bg-primary/5 font-medium cursor-pointer transition-colors flex items-center justify-between';
+                } else {
+                    child.className = 'px-3 py-2 text-sm text-on-surface hover:bg-primary/10 cursor-pointer transition-colors flex items-center justify-between';
+                }
+            });
+        });
+    });
+};
 
 // ─────────────────────────────────────────────
 // Notifications
