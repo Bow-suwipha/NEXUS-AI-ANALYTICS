@@ -79,14 +79,21 @@ if ($method === 'GET') {
     $stmtUser->execute([$fullname, $email, $role, $userId]);
     
     // Update system settings (User Specific)
-    $stmt = $pdo->prepare("SELECT id FROM system_settings WHERE user_id = ? LIMIT 1");
+    $stmt = $pdo->prepare("SELECT id, groq_api_key FROM system_settings WHERE user_id = ? LIMIT 1");
     $stmt->execute([$userId]);
     $existing = $stmt->fetch();
     
     if ($existing) {
+        // If API Key changed, reset tokens_used to 0 to simulate a fresh API key quota
+        if ($apiKey !== $existing['groq_api_key'] && !empty($apiKey)) {
+            $pdo->query("UPDATE server_metrics SET tokens_used = 0");
+        }
         $stmtSettings = $pdo->prepare("UPDATE system_settings SET groq_api_key = ?, alert_anomaly = ?, alert_weekly_summary = ? WHERE id = ?");
         $stmtSettings->execute([$apiKey, $alertAnomaly, $alertWeekly, $existing['id']]);
     } else {
+        if (!empty($apiKey)) {
+            $pdo->query("UPDATE server_metrics SET tokens_used = 0");
+        }
         $stmtSettings = $pdo->prepare("INSERT INTO system_settings (user_id, groq_api_key, alert_anomaly, alert_weekly_summary) VALUES (?, ?, ?, ?)");
         $stmtSettings->execute([$userId, $apiKey, $alertAnomaly, $alertWeekly]);
     }
