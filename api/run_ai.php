@@ -6,6 +6,9 @@ if (ob_get_level() > 0) ob_end_flush();
 
 require_once 'db.php';
 
+// Global AI Model Definition
+define('GROQ_MODEL', 'openai/gpt-oss-20b');
+
 // ฟังก์ชันสำหรับส่งข้อมูลสตรีมมิ่ง
 function streamData($type, $message) {
     echo "data: " . json_encode(['type' => $type, 'message' => $message]) . "\n\n";
@@ -165,7 +168,7 @@ try {
     ];
 
     $payload = [
-        "model" => "llama3-8b-8192", // Default to groq model
+        "model" => GROQ_MODEL, // Default to groq model
         "messages" => $messages,
         "tools" => $tools,
         "tool_choice" => "auto",
@@ -222,8 +225,9 @@ try {
         streamData('log', "<span class='text-blue-400'>[Analyst Agent]</span> Analyzing data and formulating Executive Summary...");
         
         $payload2 = [
-            "model" => "llama3-8b-8192", // match payload model
+            "model" => GROQ_MODEL, // match payload model
             "messages" => $messages,
+            "tools" => $tools,
             "temperature" => 0.5
         ];
 
@@ -238,10 +242,15 @@ try {
         curl_close($ch2);
 
         $responseData2 = json_decode($response2, true);
-        $finalReply = $responseData2['choices'][0]['message']['content'];
         
-        streamData('log', "<span class='text-emerald-500 font-bold'>>> Autonomous Workflow Completed.</span>");
-        streamData('result', $finalReply);
+        if (isset($responseData2['choices'][0]['message']['content'])) {
+            $finalReply = $responseData2['choices'][0]['message']['content'];
+            streamData('log', "<span class='text-emerald-500 font-bold'>>> Autonomous Workflow Completed.</span>");
+            streamData('result', $finalReply);
+        } else {
+            $errorMsg = isset($responseData2['error']['message']) ? $responseData2['error']['message'] : json_encode($responseData2);
+            streamData('log', "<span class='text-error font-bold'>[API Error] " . $errorMsg . "</span>");
+        }
 
     } else {
         // กรณีที่ AI คิดว่าไม่ต้องใช้ Tool (ตอบได้เลย)

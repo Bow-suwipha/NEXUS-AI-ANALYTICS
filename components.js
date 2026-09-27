@@ -156,7 +156,8 @@ window.initCustomSelects = function () {
         trigger.appendChild(chevron);
         
         const dropdown = document.createElement('ul');
-        dropdown.className = 'absolute z-50 mt-1 w-full bg-surface border border-outline-variant rounded-xl shadow-lg hidden overflow-hidden max-h-60 overflow-y-auto transform opacity-0 scale-95 transition-all duration-200 origin-top';
+        dropdown.className = 'absolute z-[9999] mt-1 w-full bg-surface border border-outline-variant rounded-xl shadow-lg hidden overflow-hidden max-h-60 overflow-y-auto transform opacity-0 scale-95 transition-all duration-200 origin-top';
+
         
         Array.from(select.options).forEach((opt, idx) => {
             const li = document.createElement('li');

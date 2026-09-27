@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="th">
 
 <head>
@@ -195,7 +195,7 @@
                         const tokensText = document.getElementById('status-tokens-text');
                         const tokensBar = document.getElementById('status-tokens-bar');
                         if (tokensText && tokensBar) {
-                            const usedStr = (data.tokens_used / 1000000).toFixed(1) + 'M';
+                            let usedStr = data.tokens_used.toString(); if (data.tokens_used >= 1000000) { usedStr = (data.tokens_used / 1000000).toFixed(1) + 'M'; } else if (data.tokens_used >= 1000) { usedStr = (data.tokens_used / 1000).toFixed(1) + 'k'; }
                             const limitStr = (data.tokens_limit / 1000000).toFixed(0) + 'M';
                             tokensText.innerHTML = `${usedStr} <span class="text-on-surface-variant font-normal text-xs">/ ${limitStr}</span>`;
 
@@ -254,6 +254,8 @@
 </body>
 
 </html>
+
+
 
 
 
