@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="tailwind-config.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <!-- ย้าย components.js มาไว้ที่ head เพื่อให้ระบบดักจับ Token ทันที -->
+    <script src="components.js?v=10"></script>
+</head>
+
+<body class="bg-surface text-on-surface font-sans antialiased">
+    <div id="navbar-placeholder"></div>
+    <main class="w-full pt-16 bg-background min-h-screen">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-space-lg w-full">
+            <!-- Header -->
+            <div class="flex flex-col gap-1 mb-2">
+                <h1 class="text-2xl text-on-surface font-bold tracking-tight">AI Insights (ข้อมูลเชิงลึกและกลยุทธ์)</h1>
+                <p class="text-sm text-on-surface-variant">ข้อค้นพบเชิงลึกและการคาดการณ์อนาคตโดย AI</p>
+            </div>
+
+
+
+            <!-- Forecasting Line Charts -->
+            <div id="charts-wrapper" class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg">
+                <!-- Forecast Charts will be injected here by JS -->
+            </div>
+        </div>
+
+        <!-- Floating Chatbot Toggle Button -->
+        <button id="chat-toggle-btn" class="fixed bottom-6 right-6 w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-transform z-50">
+            <span class="material-symbols-outlined text-[28px]" id="chat-toggle-icon">chat</span>
+        </button>
+
+        <!-- Floating AI Chatbot UI -->
+        <div id="chat-floating-window" class="fixed bottom-24 right-6 w-[350px] sm:w-[400px] bg-surface rounded-2xl border border-outline-variant shadow-2xl flex flex-col h-[500px] z-50 hidden">
+            <div class="p-space-md border-b border-outline-variant bg-surface-container-lowest rounded-t-2xl flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">smart_toy</span>
+                    <h2 class="text-base font-semibold text-on-surface">ถามผู้เชี่ยวชาญ AI</h2>
+                </div>
+                <button id="chat-close-btn" class="text-on-surface-variant hover:text-on-surface">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div id="chat-history" class="flex-1 p-space-md flex flex-col gap-3 overflow-y-auto bg-background/50">
+                <!-- Bot msg -->
+                <div class="flex gap-space-sm">
+                    <div class="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs font-semibold bg-surface-container-low text-primary border border-outline-variant">
+                        <span class="material-symbols-outlined text-[16px]">psychology</span>
+                    </div>
+                    <div class="p-3 rounded-2xl text-sm leading-relaxed max-w-[85%] bg-surface-container-low text-on-surface rounded-tl-none border border-outline-variant shadow-sm">
+                        สวัสดีครับ ผมคือผู้ช่วยวิเคราะห์ข้อมูล มีคำถามอะไรเกี่ยวกับยอดขายหรือแนวโน้มธุรกิจ ถามได้เลยครับ
+                    </div>
+                </div>
+            </div>
+            <div class="p-space-sm border-t border-outline-variant bg-surface rounded-b-2xl">
+                <div class="flex items-center gap-2 bg-surface-container-low rounded-xl pr-2 border border-outline-variant focus-within:border-primary transition-colors">
+                    <input type="text" id="chat-input" placeholder="พิมพ์คำถามเจาะลึกที่นี่..." class="flex-1 bg-transparent border-none focus:ring-0 text-sm text-on-surface px-4 py-2.5">
+                    <button id="chat-send-btn" class="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center hover:opacity-90">
+                        <span class="material-symbols-outlined text-[18px]">send</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            (async () => {
+
+                // 2. Load Chart (ดึงข้อมูล Forecast จาก API)
+                try {
+                    const resForecast = await fetch('api/forecast.php');
+                    if (resForecast.ok) {
+                        const data = await resForecast.json();
+                        const chartsWrapper = document.getElementById('charts-wrapper');
+                        chartsWrapper.innerHTML = '';
+                        
+                        // Clear old instances if exist
+                        if (window.forecastChartInstances) {
+                            window.forecastChartInstances.forEach(c => c.destroy());
+                        }
+                        window.forecastChartInstances = [];
+
+                        if (data.charts && data.charts.length > 0) {
+                            data.charts.forEach((chartData, index) => {
+                                // Create DOM elements
+                                const chartDiv = document.createElement('div');
+                                let spanClass = index === 0 ? " lg:col-span-2" : "";
+                                chartDiv.className = "bg-surface rounded-2xl border border-outline-variant shadow-sm p-space-lg flex flex-col gap-4" + spanClass;
+                                
+                                const title = document.createElement('h2');
+                                title.className = "text-lg font-semibold text-on-surface";
+                                title.innerText = chartData.title + " (คาดการณ์สัปดาห์หน้า)";
+                                
+                                const canvasContainer = document.createElement('div');
+                                canvasContainer.className = "h-72 bg-surface-container-low rounded-xl border border-outline-variant relative flex items-center justify-center px-4 pb-4 pt-4";
+                                
+                                const canvas = document.createElement('canvas');
+                                canvas.id = 'forecastChart_' + index;
+                                canvas.className = "w-full h-full";
+                                
+                                canvasContainer.appendChild(canvas);
+                                chartDiv.appendChild(title);
+                                chartDiv.appendChild(canvasContainer);
+                                
+                                if (chartData.branches_breakdown && chartData.branches_breakdown.length > 0) {
+                                    const breakdownContainer = document.createElement('div');
+                                    breakdownContainer.className = "flex flex-col gap-1 mt-1 border-t border-outline-variant pt-3";
+                                    
+                                    chartData.branches_breakdown.forEach(b => {
+                                        const row = document.createElement('div');
+                                        row.className = "flex justify-between items-center text-sm";
+                                        
+                                        const nameSpan = document.createElement('span');
+                                        nameSpan.className = "text-on-surface font-medium";
+                                        nameSpan.innerText = b.name;
+                                        
+                                        const valSpan = document.createElement('span');
+                                        valSpan.className = "text-primary font-semibold";
+                                        valSpan.innerText = "ยอดที่คาด: " + b.forecast.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                                        
+                                        row.appendChild(nameSpan);
+                                        row.appendChild(valSpan);
+                                        breakdownContainer.appendChild(row);
+                                    });
+                                    
+                                    chartDiv.appendChild(breakdownContainer);
+                                }
+                                
+                                chartsWrapper.appendChild(chartDiv);
+
+                                // Init Chart
+                                const ctx = canvas.getContext('2d');
+                                const chartInstance = new Chart(ctx, {
+                                    type: 'line',
+                                    data: {
+                                        labels: data.labels,
+                                        datasets: [
+                                            {
+                                                label: 'ยอดขายจริง',
+                                                data: chartData.actual_data,
+                                                borderColor: '#97C2EC',
+                                                backgroundColor: 'rgba(151, 194, 236, 0.2)',
+                                                borderWidth: 3,
+                                                fill: true,
+                                                tension: 0.4,
+                                                pointBackgroundColor: '#ffffff',
+                                                pointBorderColor: '#97C2EC',
+                                                pointRadius: 4,
+                                            },
+                                            {
+                                                label: 'คาดการณ์',
+                                                data: chartData.forecast_data,
+                                                borderColor: '#D6D0C2',
+                                                borderDash: [5, 5],
+                                                borderWidth: 3,
+                                                fill: false,
+                                                tension: 0.4,
+                                                pointBackgroundColor: '#ffffff',
+                                                pointBorderColor: '#D6D0C2',
+                                                pointRadius: 4,
+                                            }
+                                        ]
+                                    },
+                                    options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        plugins: {
+                                            legend: { display: true, position: 'bottom', labels: { font: { family: 'Kanit', size: 12 }, color: '#888' } },
+                                            tooltip: { mode: 'index', intersect: false, titleFont: { family: 'Kanit' }, bodyFont: { family: 'Kanit' } }
+                                        },
+                                        scales: {
+                                            x: { grid: { display: false }, ticks: { font: { family: 'Kanit', size: 10 }, color: '#888' } },
+                                            y: { grid: { color: 'rgba(255,255,255,0.1)', drawBorder: false }, ticks: { font: { family: 'Kanit', size: 10 }, color: '#888' } }
+                                        }
+                                    }
+                                });
+                                window.forecastChartInstances.push(chartInstance);
+                            });
+                        }
+                    }
+                } catch (err) {
+                    console.error("Failed to load chart", err);
+                }
+
+                // 3. Simple Chat Interaction
+                const chatInput = document.getElementById('chat-input');
+                const sendBtn = document.getElementById('chat-send-btn');
+                const chatContainer = document.getElementById('chat-history');
+                const chatToggleBtn = document.getElementById('chat-toggle-btn');
+                const chatCloseBtn = document.getElementById('chat-close-btn');
+                const chatFloatingWindow = document.getElementById('chat-floating-window');
+                const chatToggleIcon = document.getElementById('chat-toggle-icon');
+
+                // Toggle Chat Window
+                if (chatToggleBtn && chatFloatingWindow && chatCloseBtn) {
+                    const toggleChat = () => {
+                        chatFloatingWindow.classList.toggle('hidden');
+                        if (!chatFloatingWindow.classList.contains('hidden')) {
+                            chatInput.focus();
+                        }
+                    };
+                    chatToggleBtn.addEventListener('click', toggleChat);
+                    chatCloseBtn.addEventListener('click', () => {
+                        chatFloatingWindow.classList.add('hidden');
+                    });
+                }
+                
+                // Track chat history
+                let chatHistory = [];
+
+                if (chatInput && sendBtn && chatContainer) {
+                    const appendMessage = (text, isUser = true) => {
+                        const div = document.createElement('div');
+                        div.className = `flex gap-space-sm ${isUser ? 'flex-row-reverse' : ''}`;
+
+                        const avatar = document.createElement('div');
+                        avatar.className = `w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs font-semibold ${isUser ? 'bg-primary text-on-primary' : 'bg-surface-container-low text-primary border border-outline-variant'}`;
+                        avatar.innerHTML = isUser ? 'SA' : '<span class="material-symbols-outlined text-[16px]">psychology</span>';
+
+                        const bubble = document.createElement('div');
+                        bubble.className = `p-3 rounded-2xl text-sm leading-relaxed max-w-[85%] ${isUser ? 'bg-primary text-on-primary rounded-tr-none' : 'bg-surface-container-low text-on-surface rounded-tl-none border border-outline-variant shadow-sm'}`;
+                        if (isUser) {
+                            bubble.innerText = text;
+                        } else {
+                            bubble.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/^\s*[\*-]\s/gm, '&bull; ').replace(/\*/g, '').replace(/\n/g, '<br>');
+                        }
+
+                        div.appendChild(avatar);
+                        div.appendChild(bubble);
+                        chatContainer.appendChild(div);
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                    };
+
+                    const sendMessage = async () => {
+                        const text = chatInput.value.trim();
+                        if (!text) return;
+
+                        appendMessage(text, true);
+                        chatInput.value = '';
+
+                        // Add loading indicator
+                        const typingId = 'typing-' + Date.now();
+                        const typingDiv = document.createElement('div');
+                        typingDiv.id = typingId;
+                        typingDiv.className = `flex gap-space-sm`;
+                        typingDiv.innerHTML = `
+                            <div class="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs font-semibold bg-surface-container-low text-primary border border-outline-variant">
+                                <span class="material-symbols-outlined text-[16px]">psychology</span>
+                            </div>
+                            <div class="p-3 rounded-2xl bg-surface-container-low text-on-surface rounded-tl-none border border-outline-variant flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce"></span>
+                                <span class="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
+                                <span class="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce" style="animation-delay: 0.4s"></span>
+                            </div>`;
+                        chatContainer.appendChild(typingDiv);
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                        try {
+                            const response = await fetch('api/chat.php', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ 
+                                    message: text,
+                                    history: chatHistory 
+                                })
+                            });
+
+                            document.getElementById(typingId).remove();
+
+                            if (response.ok) {
+                                const data = await response.json();
+                                appendMessage(data.reply, false);
+                                
+                                // Update history
+                                chatHistory.push({ role: 'user', content: text });
+                                chatHistory.push({ role: 'assistant', content: data.reply });
+                            } else {
+                                appendMessage("ขออภัย ขาดการเชื่อมต่อกับระบบ AI หรือคีย์ไม่ถูกต้อง", false);
+                            }
+                        } catch (error) {
+                            if (document.getElementById(typingId)) {
+                                document.getElementById(typingId).remove();
+                            }
+                            appendMessage("ขออภัย เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์", false);
+                        }
+                    };
+
+                    // ลบ Event Listener เก่าออกเพื่อป้องกันการเรียกซ้ำ
+                    const newSendBtn = sendBtn.cloneNode(true);
+                    sendBtn.parentNode.replaceChild(newSendBtn, sendBtn);
+
+                    newSendBtn.addEventListener('click', sendMessage);
+                    chatInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') sendMessage();
+                    });
+                }
+            })();
+        </script>
+    </main>
+    <div id="footer-placeholder"></div>
+</body>
+
+</html>

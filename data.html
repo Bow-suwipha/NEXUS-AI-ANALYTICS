@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="tailwind-config.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="bg-surface text-on-surface font-sans antialiased">
+    <div id="navbar-placeholder"></div>
+    <main class="w-full pt-16 bg-background min-h-screen">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-space-lg w-full">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex flex-col gap-1">
+                    <h1 class="text-2xl text-on-surface font-bold tracking-tight">Data (การจัดการข้อมูล)</h1>
+                    <p class="text-sm text-on-surface-variant">ศูนย์กลางควบคุมข้อมูลดิบสำหรับป้อนให้ระบบ AI</p>
+                </div>
+                <!-- Status & Actions -->
+                <div class="flex items-center gap-3">
+                    <button id="reset-data-btn" class="hidden text-sm font-semibold text-error bg-surface hover:bg-error-container/50 px-4 py-2 rounded-xl border border-error/20 shadow-sm transition-colors flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[18px]">delete</span> ล้างข้อมูล
+                    </button>
+                    <!-- Connection Status -->
+                    <div class="flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-4 py-2 rounded-xl shadow-sm"
+                        id="ping-status-container">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" id="ping-indicator"></span>
+                        <span class="text-sm font-semibold text-emerald-700" id="ping-text">กำลังตรวจสอบ POS...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg">
+                <!-- Upload Zone -->
+                <div
+                    class="bg-surface rounded-2xl border border-outline-variant shadow-sm p-space-lg flex flex-col gap-4">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-semibold text-on-surface">นำเข้าข้อมูลเพิ่มเติม (CSV / Excel)</h2>
+                        <span class="material-symbols-outlined text-on-surface-variant">upload_file</span>
+                    </div>
+                    <input type="file" id="file-upload" class="hidden" accept=".csv, .xlsx">
+                    <label for="file-upload"
+                        class="flex-1 min-h-[200px] border-2 border-dashed border-outline-variant rounded-xl flex flex-col items-center justify-center gap-3 bg-surface-container-lowest hover:bg-surface-container-low transition-colors cursor-pointer"
+                        id="drop-zone">
+                        <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined text-[24px]">cloud_upload</span>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-sm font-semibold text-on-surface" id="upload-text">คลิกหรือลากไฟล์มาวางที่นี่
+                            </p>
+                            <p class="text-xs text-on-surface-variant mt-1">รองรับไฟล์ .csv, .xlsx ขนาดไม่เกิน 50MB</p>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Data Quality -->
+                <div
+                    class="bg-surface rounded-2xl border border-outline-variant shadow-sm p-space-lg flex flex-col gap-4">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-semibold text-on-surface">คุณภาพข้อมูลปัจจุบัน (Data Quality)</h2>
+                        <span class="material-symbols-outlined text-on-surface-variant">analytics</span>
+                    </div>
+
+                    <div class="flex items-end gap-2 mb-2">
+                        <span class="text-4xl font-bold text-primary font-mono" id="dq-score">--</span>
+                        <span class="text-lg text-on-surface-variant mb-1">/ 100</span>
+                        <span id="dq-status"
+                            class="text-sm font-semibold text-on-surface-variant ml-auto bg-surface-container px-2 py-1 rounded border border-outline-variant">รอการประเมิน</span>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="w-full h-3 bg-surface-container rounded-full overflow-hidden">
+                        <div class="h-full bg-surface-variant rounded-full transition-all" id="dq-progress" style="width: 0%;">
+                        </div>
+                    </div>
+
+                    <div class="mt-4 flex flex-col gap-3">
+                        <h3 class="text-sm font-semibold text-on-surface">ข้อสังเกตจากระบบ:</h3>
+                        <div class="flex items-start gap-2 bg-surface-container-low p-3 rounded-xl border border-outline-variant">
+                            <span class="material-symbols-outlined text-[18px] text-on-surface-variant">hourglass_empty</span>
+                            <div class="flex flex-col">
+                                <span class="text-sm text-on-surface-variant font-medium" id="missing-val-text">รอข้อมูลนำเข้า</span>
+                                <span class="text-xs text-on-surface-variant mt-0.5">-</span>
+                            </div>
+                        </div>
+                        <div
+                            class="flex items-start gap-2 bg-surface-container-low p-3 rounded-xl border border-outline-variant">
+                            <span
+                                class="material-symbols-outlined text-[18px] text-on-surface-variant">check_circle</span>
+                            <div class="flex flex-col">
+                                <span class="text-sm text-on-surface font-medium">ไม่มีข้อมูลซ้ำซ้อน (No
+                                    Duplicates)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons (แสดงหลังจากอัปโหลดไฟล์และประเมินผลเสร็จ) -->
+                <div id="data-actions" class="col-span-full mt-4 flex flex-col sm:flex-row gap-3" style="display: none;">
+                    
+                    <!-- ปุ่มที่ 1: คลีนข้อมูล (เน้นสีส้ม/แดง หากมีปัญหาข้อมูลหาย) -->
+                    <button class="flex-1 bg-warning-container/20 border border-warning/30 hover:bg-warning-container/40 text-warning-dark rounded-xl p-4 flex items-center justify-center gap-2 transition-all">
+                        <span class="material-symbols-outlined">auto_fix_high</span>
+                        <div class="text-left">
+                            <div class="text-sm font-bold">ให้ AI จัดการข้อมูลสูญหาย</div>
+                            <div class="text-xs opacity-80">คลีนข้อมูล 12 รายการอัตโนมัติ</div>
+                        </div>
+                    </button>
+
+                    <!-- ปุ่มที่ 2: นำเข้า DB (ปุ่มหลัก) -->
+                    <button class="flex-1 bg-primary text-on-primary hover:opacity-90 rounded-xl p-4 flex items-center justify-center gap-2 shadow-sm transition-all">
+                        <span class="material-symbols-outlined">database</span>
+                        <div class="text-left">
+                            <div class="text-sm font-bold">บันทึกลงฐานข้อมูล (Sync)</div>
+                            <div class="text-xs opacity-90">อัปเดตข้อมูลไปยังแดชบอร์ด</div>
+                        </div>
+                    </button>
+
+                    <!-- ปุ่มที่ 3: วิเคราะห์ทันที -->
+                    <button class="flex-1 bg-surface-container-low border border-outline-variant hover:border-primary text-on-surface rounded-xl p-4 flex items-center justify-center gap-2 transition-all">
+                        <span class="material-symbols-outlined">psychology</span>
+                        <div class="text-left">
+                            <div class="text-sm font-bold">ส่งให้ AI วิเคราะห์</div>
+                            <div class="text-xs text-on-surface-variant">ไปยังหน้า Sales Analysis</div>
+                        </div>
+                    </button>
+                </div>
+                
+                <!-- Live AI Terminal & Insight Result (Hidden by default) -->
+                <div id="ai-realtime-terminal" class="hidden flex flex-col gap-2 mt-4 lg:col-span-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-on-surface-variant font-mono uppercase tracking-wider font-semibold">Live Agent Execution</span>
+                        <span class="flex h-2 w-2 relative">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                        </span>
+                    </div>
+                    <div id="ai-realtime-logs" class="bg-black/90 rounded-xl p-4 h-[150px] overflow-y-auto font-mono text-[13px] text-green-400 border border-outline-variant/30 flex flex-col gap-1">
+                    </div>
+                </div>
+
+                <div id="ai-realtime-output" class="hidden flex-col gap-3 mt-4 p-space-md rounded-xl bg-primary-container/20 border border-primary/30 relative overflow-hidden lg:col-span-2">
+                    <div class="absolute -right-4 -top-4 opacity-10">
+                        <span class="material-symbols-outlined text-[100px] text-primary">auto_awesome</span>
+                    </div>
+                    <div class="flex items-center gap-2 relative z-10">
+                        <span class="material-symbols-outlined text-primary text-[20px] animate-pulse">auto_awesome</span>
+                        <h3 class="font-semibold text-on-surface text-lg">สรุปจาก AI</h3>
+                    </div>
+                    <p id="ai-insight-text" class="text-sm text-on-surface leading-relaxed relative z-10 font-medium"></p>
+                </div>
+
+            </div>
+        </div>
+    </main>
+    <script src="components.js?v=6"></script>
+    <script>
+        (async () => {
+            // 1. Ping POS
+            try {
+                const res = await fetch('api/ping.php');
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('ping-text').innerText = `เชื่อมต่อ POS: สำเร็จ (${data.latency_ms}ms)`;
+                } else {
+                    throw new Error('Ping failed');
+                }
+            } catch (err) {
+                document.getElementById('ping-text').innerText = 'ไม่สามารถเชื่อมต่อ POS ได้';
+                document.getElementById('ping-indicator').classList.replace('bg-emerald-500', 'bg-error');
+                document.getElementById('ping-status-container').classList.replace('bg-emerald-50', 'bg-error-container');
+                document.getElementById('ping-status-container').classList.replace('border-emerald-200', 'border-error');
+            }
+
+            // 2. File Upload Handling
+            const fileInput = document.getElementById('file-upload');
+            const uploadText = document.getElementById('upload-text');
+            const dropZone = document.getElementById('drop-zone');
+
+            async function handleFileUpload(file) {
+                if (!file) return;
+
+                uploadText.innerText = `กำลังอัปโหลด: ${file.name}...`;
+
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                    const res = await fetch('api/upload-sales.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await res.json();
+
+                    if (res.ok) {
+                        uploadText.innerText = `อัปโหลด ${file.name} สำเร็จ!`;
+
+                        const score = data.data_quality_score;
+                        document.getElementById('dq-score').innerText = score;
+                        document.getElementById('dq-progress').style.width = `${score}%`;
+
+                        if (score >= 90) {
+                            document.getElementById('dq-status').innerText = 'อยู่ในเกณฑ์ดีเยี่ยม';
+                            document.getElementById('dq-status').className = 'text-sm font-semibold text-emerald-600 ml-auto bg-emerald-50 px-2 py-1 rounded border border-emerald-200';
+                            document.getElementById('dq-progress').className = 'h-full bg-emerald-500 rounded-full transition-all';
+                        } else if (score >= 70) {
+                            document.getElementById('dq-status').innerText = 'พอใช้';
+                            document.getElementById('dq-status').className = 'text-sm font-semibold text-yellow-600 ml-auto bg-yellow-50 px-2 py-1 rounded border border-yellow-200';
+                            document.getElementById('dq-progress').className = 'h-full bg-yellow-500 rounded-full transition-all';
+                        } else {
+                            document.getElementById('dq-status').innerText = 'ต้องแก้ไขด่วน';
+                            document.getElementById('dq-status').className = 'text-sm font-semibold text-error ml-auto bg-error-container px-2 py-1 rounded border border-error';
+                            document.getElementById('dq-progress').className = 'h-full bg-error rounded-full transition-all';
+                        }
+
+                        const missingValDiv = document.getElementById('missing-val-text').closest('.bg-error-container\\/10') || document.getElementById('missing-val-text').closest('.bg-surface-container-low');
+                        const missingIcon = missingValDiv.querySelector('.material-symbols-outlined');
+                        const aiCleanBtn = document.querySelector('#data-actions button:nth-child(1)');
+
+                        if (data.missing_values === 0) {
+                            missingValDiv.className = 'flex items-start gap-2 bg-surface-container-low p-3 rounded-xl border border-outline-variant';
+                            missingIcon.className = 'material-symbols-outlined text-[18px] text-emerald-600';
+                            missingIcon.innerText = 'check_circle';
+                            document.getElementById('missing-val-text').className = 'text-sm text-on-surface font-medium';
+                            document.getElementById('missing-val-text').innerText = 'ข้อมูลครบถ้วนสมบูรณ์ (0 Missing Values)';
+                            document.getElementById('missing-val-text').nextElementSibling.innerText = 'พร้อมสำหรับนำเข้าฐานข้อมูล';
+                            
+                            if (aiCleanBtn) aiCleanBtn.style.display = 'none';
+                        } else {
+                            missingValDiv.className = 'flex items-start gap-2 bg-error-container/10 p-3 rounded-xl border border-error/20';
+                            missingIcon.className = 'material-symbols-outlined text-[18px] text-error';
+                            missingIcon.innerText = 'error';
+                            document.getElementById('missing-val-text').className = 'text-sm text-error font-medium';
+                            document.getElementById('missing-val-text').innerText = `พบข้อมูลสูญหาย (Missing Values) ${data.missing_values} รายการ`;
+                            document.getElementById('missing-val-text').nextElementSibling.innerText = 'จำเป็นต้องแก้ไขเพื่อให้ AI วิเคราะห์แม่นยำ';
+                            
+                            if (aiCleanBtn) aiCleanBtn.style.display = 'flex';
+                        }
+                        
+                        // Show Actions
+                        const actionsDiv = document.getElementById('data-actions');
+                        if (actionsDiv) {
+                            actionsDiv.style.display = 'flex';
+                        }
+                        
+                        // Show Reset Button
+                        const resetBtn = document.getElementById('reset-data-btn');
+                        if (resetBtn) resetBtn.classList.remove('hidden');
+                    } else {
+                        uploadText.innerText = `Error: ${data.detail || 'Upload failed'}`;
+                    }
+                } catch (err) {
+                    uploadText.innerText = `Upload Failed: ${err.message}`;
+                }
+            }
+
+            if (fileInput) {
+                fileInput.addEventListener('change', (e) => {
+                    handleFileUpload(e.target.files[0]);
+                });
+            }
+
+            // Drag and Drop implementation
+            if (dropZone) {
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    dropZone.addEventListener(eventName, preventDefaults, false);
+                });
+
+                function preventDefaults(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    dropZone.addEventListener(eventName, () => {
+                        dropZone.classList.add('bg-surface-container');
+                        dropZone.classList.add('border-primary');
+                    }, false);
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    dropZone.addEventListener(eventName, () => {
+                        dropZone.classList.remove('bg-surface-container');
+                        dropZone.classList.remove('border-primary');
+                    }, false);
+                });
+
+                dropZone.addEventListener('drop', (e) => {
+                    const dt = e.dataTransfer;
+                    const file = dt.files[0];
+                    handleFileUpload(file);
+                });
+            }
+        })();
+    </script>
+    <div id="footer-placeholder"></div>
+    <script>
+        // หาปุ่ม "บันทึกลงฐานข้อมูล (Sync)" (ปุ่มที่ 2)
+        const syncBtn = document.querySelector('#data-actions button:nth-child(2)');
+
+        if (syncBtn) {
+            syncBtn.addEventListener('click', async function() {
+                const originalHtml = this.innerHTML;
+                
+                // เปลี่ยนหน้าตาปุ่มตอนกำลังโหลด
+                this.innerHTML = `
+                    <span class="material-symbols-outlined animate-spin text-xl">sync</span>
+                    <div class="text-left">
+                        <div class="text-sm font-bold">กำลังซิงค์ข้อมูล...</div>
+                        <div class="text-xs opacity-90">กรุณารอสักครู่</div>
+                    </div>
+                `;
+                this.disabled = true;
+                this.classList.add('opacity-75');
+
+                try {
+                    const response = await fetch('api/sync_csv.php');
+                    const result = await response.json();
+
+                    if (result.status === 'success') {
+                        // แจ้งเตือนเมื่อสำเร็จ
+                        alert(result.message);
+                        this.innerHTML = `
+                            <span class="material-symbols-outlined text-xl">check_circle</span>
+                            <div class="text-left">
+                                <div class="text-sm font-bold">ซิงค์ข้อมูลสำเร็จ</div>
+                            </div>
+                        `;
+                        this.classList.replace('bg-primary', 'bg-emerald-600');
+                    } else {
+                        alert('ข้อผิดพลาด: ' + result.message);
+                        this.innerHTML = originalHtml;
+                        this.disabled = false;
+                        this.classList.remove('opacity-75');
+                    }
+                } catch (error) {
+                    alert('เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์');
+                    this.innerHTML = originalHtml;
+                    this.disabled = false;
+                    this.classList.remove('opacity-75');
+                }
+            });
+        }
+
+        // หาปุ่ม "ส่งให้ AI วิเคราะห์" (ปุ่มที่ 3)
+        const analyzeBtn = document.querySelector('#data-actions button:nth-child(3)');
+
+        if (analyzeBtn) {
+            analyzeBtn.addEventListener('click', async function() {
+                const originalHtml = this.innerHTML;
+                this.innerHTML = `
+                    <span class="material-symbols-outlined animate-spin text-xl text-primary">sync</span>
+                    <div class="text-left">
+                        <div class="text-sm font-bold text-primary">กำลังประมวลผล...</div>
+                        <div class="text-xs opacity-80">ให้ AI วิเคราะห์ข้อมูลล่าสุด</div>
+                    </div>
+                `;
+                this.classList.add('border-primary', 'bg-surface-container-low');
+                this.disabled = true;
+
+                const wsTerminal = document.getElementById('ai-realtime-terminal');
+                const wsOutput = document.getElementById('ai-realtime-logs');
+                const insightBox = document.getElementById('ai-realtime-output');
+                const insightText = document.getElementById('ai-insight-text');
+
+                if (wsTerminal) wsTerminal.classList.remove('hidden');
+                if (insightBox) insightBox.classList.add('hidden');
+                if (wsOutput) wsOutput.innerHTML = '<div class="text-on-surface-variant/50 italic">Establishing secure connection...</div>';
+
+                try {
+                    const response = await fetch('api/run_ai.php', { 
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            date: 'เดือนล่าสุด',
+                            product: 'ภาพรวมทั้งหมด',
+                            branch: 'ทุกสาขา',
+                            region: 'ภาพรวมระดับประเทศ'
+                        })
+                    });
+                    
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder("utf-8");
+                    let buffer = '';
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n\n');
+                        buffer = lines.pop(); 
+
+                        for (let line of lines) {
+                            if (line.startsWith('data: ')) {
+                                try {
+                                    const data = JSON.parse(line.substring(6));
+                                    if (data.type === 'log') {
+                                        const p = document.createElement('div');
+                                        p.innerHTML = data.message;
+                                        p.className = "py-1 text-sm border-b border-surface-container/30 last:border-0";
+                                        wsOutput.appendChild(p);
+                                        wsOutput.scrollTop = wsOutput.scrollHeight;
+                                    } else if (data.type === 'result') {
+                                        if (insightBox) insightBox.classList.remove('hidden');
+                                        if (insightText) insightText.innerHTML = data.message.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/^\s*[\*-]\s/gm, '&bull; ').replace(/\*/g, '').replace(/\n/g, '<br>');
+                                        
+                                        this.innerHTML = `
+                                            <span class="material-symbols-outlined text-primary text-[18px]">done</span>
+                                            <div class="text-left">
+                                                <div class="text-sm font-bold text-primary">วิเคราะห์เสร็จสิ้น</div>
+                                            </div>
+                                        `;
+                                    }
+                                } catch (e) {}
+                            }
+                        }
+                    }
+                } catch (error) {
+                    wsOutput.innerHTML += `<div class="py-1 text-sm text-error">Connection interrupted.</div>`;
+                    this.innerHTML = originalHtml;
+                    this.disabled = false;
+                }
+            });
+        }
+        
+        // ฟังก์ชันล้างข้อมูล (Reset)
+        const resetBtn = document.getElementById('reset-data-btn');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                // เคลียร์ไฟล์
+                const fileInput = document.getElementById('file-upload');
+                if (fileInput) fileInput.value = '';
+                document.getElementById('upload-text').innerText = 'คลิกหรือลากไฟล์มาวางที่นี่';
+                
+                // รีเซ็ต Data Quality
+                document.getElementById('dq-score').innerText = '--';
+                document.getElementById('dq-progress').style.width = '0%';
+                document.getElementById('dq-progress').className = 'h-full bg-surface-variant rounded-full transition-all';
+                document.getElementById('dq-status').innerText = 'รอการประเมิน';
+                document.getElementById('dq-status').className = 'text-sm font-semibold text-on-surface-variant ml-auto bg-surface-container px-2 py-1 rounded border border-outline-variant';
+                
+                // รีเซ็ตข้อความ Missing Values
+                const missingValDiv = document.getElementById('missing-val-text').closest('.bg-error-container\\/10') || document.getElementById('missing-val-text').closest('.bg-surface-container-low');
+                if (missingValDiv) {
+                    missingValDiv.className = 'flex items-start gap-2 bg-surface-container-low p-3 rounded-xl border border-outline-variant';
+                    const missingIcon = missingValDiv.querySelector('.material-symbols-outlined');
+                    if (missingIcon) {
+                        missingIcon.className = 'material-symbols-outlined text-[18px] text-on-surface-variant';
+                        missingIcon.innerText = 'hourglass_empty';
+                    }
+                }
+                document.getElementById('missing-val-text').className = 'text-sm text-on-surface-variant font-medium';
+                document.getElementById('missing-val-text').innerText = 'รอข้อมูลนำเข้า';
+                if (document.getElementById('missing-val-text').nextElementSibling) {
+                    document.getElementById('missing-val-text').nextElementSibling.innerText = '-';
+                }
+
+                // ซ่อนส่วน Actions
+                const actionsDiv = document.getElementById('data-actions');
+                if (actionsDiv) actionsDiv.style.display = 'none';
+                
+                // ซ่อน AI Terminal & Output
+                const wsTerminal = document.getElementById('ai-realtime-terminal');
+                if (wsTerminal) wsTerminal.classList.add('hidden');
+                
+                const insightBox = document.getElementById('ai-realtime-output');
+                if (insightBox) insightBox.classList.add('hidden');
+                
+                // ซ่อนปุ่ม Reset ตัวเอง
+                resetBtn.classList.add('hidden');
+                
+                // คืนค่าสถานะปุ่มต่างๆ เผื่อกดอีกรอบ
+                if (analyzeBtn) {
+                    analyzeBtn.disabled = false;
+                    analyzeBtn.className = 'flex-1 bg-surface-container-low border border-outline-variant hover:border-primary text-on-surface rounded-xl p-4 flex items-center justify-center gap-2 transition-all';
+                    analyzeBtn.innerHTML = `
+                        <span class="material-symbols-outlined">psychology</span>
+                        <div class="text-left">
+                            <div class="text-sm font-bold">ส่งให้ AI วิเคราะห์</div>
+                            <div class="text-xs text-on-surface-variant">วิเคราะห์ข้อมูลล่าสุด</div>
+                        </div>
+                    `;
+                }
+
+                if (syncBtn) {
+                    syncBtn.disabled = false;
+                    syncBtn.className = 'flex-1 bg-primary text-on-primary hover:opacity-90 rounded-xl p-4 flex items-center justify-center gap-2 shadow-sm transition-all';
+                    syncBtn.innerHTML = `
+                        <span class="material-symbols-outlined">database</span>
+                        <div class="text-left">
+                            <div class="text-sm font-bold">บันทึกลงฐานข้อมูล (Sync)</div>
+                            <div class="text-xs opacity-90">อัปเดตข้อมูลไปยังแดชบอร์ด</div>
+                        </div>
+                    `;
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="tailwind-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="bg-background text-on-surface font-sans min-h-screen flex flex-col">
+    <div id="navbar-placeholder"></div>
+    <main class="flex-1 w-full bg-background pt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+            <!-- Header Bar -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-2xl text-on-surface font-bold tracking-tight">ภาพรวมยอดขาย</h1>
+                        <span class="text-xs text-on-surface-variant font-normal">อัปเดตแบบเรียลไทม์</span>
+                    </div>
+                    <p class="text-sm text-on-surface-variant mt-0.5">สรุปผลการดำเนินงานและแนวโน้มการเติบโตธุรกิจ</p>
+                </div>
+                <!-- Controls -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <div class="flex items-center p-1 rounded-xl bg-surface-container border border-outline-variant">
+                        <button
+                            class="period-tab px-3 py-1 rounded-lg text-xs text-on-surface-variant hover:text-on-surface transition-all"
+                            type="button">วันนี้</button>
+                        <button
+                            class="period-tab px-3 py-1 rounded-lg text-xs text-on-surface-variant hover:text-on-surface transition-all"
+                            type="button">สัปดาห์นี้</button>
+                        <button
+                            class="period-tab px-3 py-1 rounded-lg text-xs bg-surface-container-lowest text-primary font-semibold shadow-sm transition-all"
+                            type="button">เดือนนี้</button>
+                        <button
+                            class="period-tab px-3 py-1 rounded-lg text-xs text-on-surface-variant hover:text-on-surface transition-all"
+                            type="button">ไตรมาสนี้</button>
+                    </div>
+                    <button onclick="window.location.href='export_pdf.php'"
+                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-container-lowest border border-outline-variant text-on-surface text-xs font-medium hover:bg-surface-container-low transition-colors"
+                        type="button">
+                        <span class="material-symbols-outlined text-[16px] text-error">picture_as_pdf</span>
+                        <span>PDF</span>
+                    </button>
+                    <button onclick="window.location.href='export_excel'"
+                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-container-lowest border border-outline-variant text-on-surface text-xs font-medium hover:bg-surface-container-low transition-colors"
+                        type="button">
+                        <span class="material-symbols-outlined text-[16px] text-primary">table_view</span>
+                        <span>Excel</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                <div
+                    class="p-5 rounded-2xl bg-surface border border-outline-variant shadow-sm flex flex-col justify-between">
+                    <div class="flex items-start justify-between">
+                        <span
+                            class="text-xs font-medium text-on-surface-variant uppercase tracking-wider">ยอดขายรวม</span>
+                        <span class="material-symbols-outlined text-primary text-[20px]">payments</span>
+                    </div>
+                    <div class="mt-3">
+                        <span id="kpi-total-sales" class="text-2xl font-bold text-on-surface tracking-tight">฿...</span>
+                        <div class="flex items-center justify-between mt-2 pt-1 border-t border-outline-variant">
+                            <span class="text-xs font-semibold text-emerald-600 flex items-center gap-0.5">
+                                <span class="material-symbols-outlined text-[14px]">arrow_upward</span> +14.2%
+                            </span>
+                            <span class="text-[11px] text-on-surface-variant">เทียบเป้าหมาย</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    class="p-5 rounded-2xl bg-surface border border-outline-variant shadow-sm flex flex-col justify-between">
+                    <div class="flex items-start justify-between">
+                        <span
+                            class="text-xs font-medium text-on-surface-variant uppercase tracking-wider">ยอดขายเดือนนี้</span>
+                        <span class="material-symbols-outlined text-outline text-[20px]">calendar_today</span>
+                    </div>
+                    <div class="mt-3">
+                        <span id="kpi-period-sales"
+                            class="text-2xl font-bold text-on-surface tracking-tight">฿...</span>
+                        <div class="mt-2 pt-1">
+                            <div class="w-full h-1.5 rounded-full bg-surface-container-high">
+                                <div id="kpi-progress-bar" class="h-1.5 rounded-full bg-primary" style="width: 0%;">
+                                </div>
+                            </div>
+                            <div class="flex justify-between text-[11px] text-on-surface-variant mt-1.5">
+                                <span id="kpi-progress-text">ความคืบหน้า 0%</span>
+                                <span id="kpi-target-text">เป้า ฿...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    class="p-5 rounded-2xl bg-surface border border-outline-variant shadow-sm flex flex-col justify-between">
+                    <div class="flex items-start justify-between">
+                        <span
+                            class="text-xs font-medium text-on-surface-variant uppercase tracking-wider">รายการขาย</span>
+                        <span class="material-symbols-outlined text-outline text-[20px]">receipt_long</span>
+                    </div>
+                    <div class="mt-3">
+                        <div class="flex items-baseline gap-1">
+                            <span id="kpi-total-orders"
+                                class="text-2xl font-bold text-on-surface tracking-tight">...</span>
+                            <span class="text-xs text-on-surface-variant">รายการ</span>
+                        </div>
+                        <div
+                            class="flex items-center justify-between mt-2 pt-1 border-t border-outline-variant text-[11px]">
+                            <span class="text-on-surface-variant">เฉลี่ยต่อออเดอร์</span>
+                            <span class="font-semibold text-on-surface">฿146.37</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    class="p-5 rounded-2xl bg-surface border border-outline-variant shadow-sm flex flex-col justify-between">
+                    <div class="flex items-start justify-between">
+                        <span
+                            class="text-xs font-medium text-on-surface-variant uppercase tracking-wider">สินค้าขายดี</span>
+                        <span class="material-symbols-outlined text-primary text-[20px]">star</span>
+                    </div>
+                    <div class="mt-3">
+                        <div class="flex items-baseline justify-between">
+                            <span id="kpi-best-product"
+                                class="text-xl font-bold text-primary tracking-tight leading-tight mr-2 break-words max-w-[80%]">...</span>
+                            <span id="kpi-best-product-qty" class="text-xs font-semibold text-on-surface whitespace-nowrap">...</span>
+                        </div>
+                        <div
+                            class="mt-2 pt-1 border-t border-outline-variant flex items-center justify-between text-[11px] text-on-surface-variant">
+                            <span>ยอดรวมเดือนนี้</span>
+                            <span class="font-medium text-on-surface">2,391 ชิ้น</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    class="p-5 rounded-2xl bg-surface border border-outline-variant shadow-sm flex flex-col justify-between">
+                    <div class="flex items-start justify-between">
+                        <span
+                            class="text-xs font-medium text-on-surface-variant uppercase tracking-wider">การเติบโต</span>
+                        <span class="material-symbols-outlined text-emerald-600 text-[20px]">trending_up</span>
+                    </div>
+                    <div class="mt-3">
+                        <span class="text-2xl font-bold text-emerald-600 tracking-tight">+12.5%</span>
+                        <div
+                            class="flex items-center justify-between mt-2 pt-1 border-t border-outline-variant text-[11px]">
+                            <span class="text-emerald-700 font-medium">MoM Growth</span>
+                            <span class="text-on-surface-variant">ต่อเนื่อง 3 เดือน</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trend Visuals + AI Insights Panel -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div
+                    class="lg:col-span-7 flex flex-col space-y-4 p-6 rounded-2xl bg-surface border border-outline-variant shadow-sm">
+                    <div class="flex items-center justify-between pb-1">
+                        <div>
+                            <h2 class="text-base text-on-surface font-semibold">ยอดขายรายเดือน</h2>
+                            <p class="text-xs text-on-surface-variant">แนวโน้มรายเดือนตั้งแต่ต้นปี 2569</p>
+                        </div>
+                        <div
+                            class="flex items-center p-0.5 rounded-xl bg-surface-container text-xs border border-outline-variant">
+                            <button
+                                class="px-2.5 py-1 rounded-lg text-on-surface-variant hover:text-on-surface">รายสัปดาห์</button>
+                            <button
+                                class="px-2.5 py-1 rounded-lg bg-surface text-primary font-semibold shadow-sm">รายเดือน</button>
+                            <button
+                                class="px-2.5 py-1 rounded-lg text-on-surface-variant hover:text-on-surface">รายไตรมาส</button>
+                        </div>
+                    </div>
+                    <div
+                        class="relative w-full h-56 bg-surface-container-low/50 rounded-2xl p-4 flex flex-col justify-between overflow-hidden border border-outline-variant">
+                        <canvas id="salesChart" class="w-full h-full"></canvas>
+                    </div>
+                    <!-- Breakdown Section -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                        <div
+                            class="p-4 rounded-2xl bg-surface-container-low border border-outline-variant flex flex-col justify-between">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-sm font-semibold text-on-surface">ช่องทางขาย</span>
+                                <span
+                                    class="material-symbols-outlined text-[16px] text-on-surface-variant">donut_large</span>
+                            </div>
+                            <div class="space-y-2.5">
+                                <div>
+                                    <div class="flex justify-between text-xs text-on-surface mb-1">
+                                        <span>E-Commerce</span>
+                                        <span class="font-semibold">54%</span>
+                                    </div>
+                                    <div class="w-full h-1.5 rounded-full bg-surface-container-high">
+                                        <div class="h-1.5 rounded-full bg-primary" style="width: 54%;"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-xs text-on-surface mb-1">
+                                        <span>หน้าร้านสาขา</span>
+                                        <span class="font-semibold">32%</span>
+                                    </div>
+                                    <div class="w-full h-1.5 rounded-full bg-surface-container-high">
+                                        <div class="h-1.5 rounded-full bg-secondary" style="width: 32%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div
+                            class="p-4 rounded-2xl bg-surface-container-low border border-outline-variant flex flex-col justify-between">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-sm font-semibold text-on-surface">หมวดสินค้า</span>
+                                <span class="text-[11px] font-medium text-emerald-700">Q3 Lead</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 text-center py-2">
+                                <div>
+                                    <span class="text-[11px] text-on-surface-variant block">Electronics</span>
+                                    <span class="text-sm font-bold text-on-surface">42.8%</span>
+                                    <span class="text-[11px] text-emerald-600 block mt-0.5">+18.2%</span>
+                                </div>
+                                <div>
+                                    <span class="text-[11px] text-on-surface-variant block">Lifestyle</span>
+                                    <span class="text-sm font-bold text-on-surface">31.4%</span>
+                                    <span class="text-[11px] text-emerald-600 block mt-0.5">+8.4%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT 5 COLS: AI Insights Panel -->
+                <div
+                    class="lg:col-span-5 flex flex-col p-6 rounded-2xl bg-surface border border-outline-variant shadow-sm space-y-4">
+                    <div class="flex items-center justify-between pb-1 border-b border-outline-variant">
+                        <div class="flex items-center gap-2">
+                            <div class="w-7 h-7 rounded-xl bg-primary/20 text-primary flex items-center justify-center">
+                                <span class="material-symbols-outlined text-[18px]">psychology</span>
+                            </div>
+                            <h2 class="text-base text-on-surface font-semibold">AI Insights</h2>
+                        </div>
+                        <span
+                            class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Active
+                        </span>
+                    </div>
+                    <!-- Dynamic Insights -->
+                    <div id="ai-insights-container" class="space-y-3 flex-1 overflow-y-auto max-h-[300px] pr-2">
+                        <div class="text-center text-sm text-on-surface-variant py-4">
+                            <span class="material-symbols-outlined animate-spin mb-2">sync</span>
+                            <p>กำลังวิเคราะห์ข้อมูล...</p>
+                        </div>
+                    </div>
+                    <!-- Action Buttons -->
+                    <div class="pt-2 flex items-center gap-2">
+                        <button onclick="window.location.href='ai-insights.html'"
+                            class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-on-surface text-surface hover:bg-neutral-800 text-xs font-semibold transition-all shadow-sm"
+                            type="button">
+                            <span class="material-symbols-outlined text-[16px]">search_insights</span>
+                            <span>วิเคราะห์เพิ่มเติม</span>
+                        </button>
+                        <button onclick="window.location.href='export_excel'"
+                            class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-semibold transition-all border border-outline-variant"
+                            type="button">
+                            <span class="material-symbols-outlined text-[16px]">summarize</span>
+                            <span>สร้างรายงาน</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ย้าย Script เข้ามาไว้ "ภายใน" แท็ก main ตรงนี้ครับ! -->
+        <script>
+            (async () => {
+                const formatNumber = new Intl.NumberFormat('th-TH');
+
+                async function loadKPIData(period) {
+                    try {
+                        const res = await fetch(`api/kpi.php?period=${period}`);
+                        if (!res.ok) throw new Error('API Error');
+                        const data = await res.json();
+
+                        document.getElementById('kpi-total-sales').innerText = `฿${formatNumber.format(data.total_sales.toFixed(2))}`;
+                        document.getElementById('kpi-period-sales').innerText = `฿${formatNumber.format(data.total_sales.toFixed(2))}`;
+                        document.getElementById('kpi-total-orders').innerText = formatNumber.format(data.total_orders);
+                        document.getElementById('kpi-best-product').innerText = data.best_product.name;
+                        document.getElementById('kpi-best-product-qty').innerText = `${formatNumber.format(data.best_product.quantity)} ชิ้น`;
+
+                        const kpiTarget = data.kpi_target || 288000;
+                        const progressPercent = Math.min(100, Math.max(0, (data.total_sales / kpiTarget) * 100));
+                        document.getElementById('kpi-progress-bar').style.width = `${progressPercent}%`;
+                        document.getElementById('kpi-progress-text').innerText = `ความคืบหน้า ${progressPercent.toFixed(1)}%`;
+                        const formattedTarget = kpiTarget >= 1000 ? (kpiTarget / 1000).toFixed(0) + 'k' : kpiTarget;
+                        document.getElementById('kpi-target-text').innerText = `เป้า ฿${formattedTarget}`;
+
+                        const ctx = document.getElementById('salesChart').getContext('2d');
+                        if (window.salesChartInstance) {
+                            window.salesChartInstance.destroy();
+                        }
+
+                        const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+                        gradient.addColorStop(0, 'rgba(151, 194, 236, 0.4)');
+                        gradient.addColorStop(1, 'rgba(151, 194, 236, 0.0)');
+
+                        window.salesChartInstance = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: data.chart.labels,
+                                datasets: [{
+                                    label: 'ยอดขายรวม (บาท)',
+                                    data: data.chart.values,
+                                    borderColor: '#97C2EC',
+                                    backgroundColor: gradient,
+                                    borderWidth: 3,
+                                    pointBackgroundColor: '#ffffff',
+                                    pointBorderColor: '#97C2EC',
+                                    pointBorderWidth: 2,
+                                    pointRadius: 4,
+                                    pointHoverRadius: 6,
+                                    fill: true,
+                                    tension: 0.4
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: { display: false },
+                                    tooltip: {
+                                        mode: 'index',
+                                        intersect: false,
+                                        backgroundColor: 'rgba(0,0,0,0.8)',
+                                        titleFont: { family: 'Kanit' }
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    grid: { display: false },
+                                    ticks: { font: { family: 'Kanit', size: 10 }, color: '#888' }
+                                },
+                                y: {
+                                    grid: { color: 'rgba(255,255,255,0.1)', drawBorder: false },
+                                    ticks: {
+                                        font: { family: 'Kanit', size: 10 },
+                                        color: '#888',
+                                        callback: function (value) {
+                                            return value >= 1000 ? (value / 1000) + 'k' : value;
+                                        }
+                                    }
+                                }
+                            },
+                            interaction: {
+                                mode: 'nearest',
+                                axis: 'x',
+                                intersect: false
+                            }
+                        });
+                    } catch (error) {
+                        console.error("Failed to fetch KPI data:", error);
+                    }
+                }
+
+                async function loadInsights() {
+                    try {
+                        const res = await fetch('api/insights_alerts.php');
+                        if (!res.ok) throw new Error('API Error');
+                        const insights = await res.json();
+
+                        const container = document.getElementById('ai-insights-container');
+                        container.innerHTML = '';
+
+                        if (insights.length === 0) {
+                            container.innerHTML = '<div class="text-center text-sm text-on-surface-variant py-4">ไม่มีข้อมูล Insights</div>';
+                            return;
+                        }
+
+                        insights.forEach(insight => {
+                            let icon = 'lightbulb';
+                            let bgClass = 'bg-surface-container-low border border-outline-variant';
+                            let textClass = 'text-primary';
+                            let bodyTextClass = 'text-on-surface-variant';
+                            let badge = '';
+
+                            if (insight.insight_type === 'Trend') {
+                                icon = 'trending_up';
+                            } else if (insight.insight_type === 'Top Product') {
+                                icon = 'workspace_premium';
+                            } else if (insight.insight_type === 'Anomaly') {
+                                icon = 'warning';
+                                bgClass = 'bg-error-container border border-error-container';
+                                textClass = 'text-on-error-container';
+                                bodyTextClass = 'text-on-error-container';
+                                if (insight.severity === 'High') {
+                                    badge = `<span class="text-[10px] text-white bg-error px-1.5 py-0.5 rounded-md">High</span>`;
+                                }
+                            }
+
+                            const html = `
+                                <div class="p-3.5 rounded-xl ${bgClass}">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <div class="flex items-center gap-1.5 ${textClass}">
+                                            <span class="material-symbols-outlined text-[16px]">${icon}</span>
+                                            <span class="text-xs font-semibold uppercase tracking-wider">${insight.title}</span>
+                                        </div>
+                                        ${badge}
+                                    </div>
+                                    <p class="text-xs ${bodyTextClass} leading-relaxed">
+                                        ${insight.description}
+                                    </p>
+                                </div>
+                            `;
+                            container.insertAdjacentHTML('beforeend', html);
+                        });
+
+                    } catch (e) {
+                        console.error("Error loading insights", e);
+                        document.getElementById('ai-insights-container').innerHTML = '<div class="text-center text-sm text-error py-4">ไม่สามารถโหลดข้อมูลได้</div>';
+                    }
+                }
+
+                loadKPIData('month');
+                loadInsights();
+
+                const periodTabs = document.querySelectorAll('.period-tab');
+                periodTabs.forEach(tab => {
+                    tab.addEventListener('click', (e) => {
+                        periodTabs.forEach(t => { t.className = 'period-tab px-3 py-1 rounded-lg text-xs text-on-surface-variant hover:text-on-surface transition-all'; });
+                        e.target.className = 'period-tab px-3 py-1 rounded-lg text-xs bg-surface-container-lowest text-primary font-semibold shadow-sm transition-all';
+
+                        const text = e.target.innerText.trim();
+                        const periodMap = { 'วันนี้': 'today', 'สัปดาห์นี้': 'week', 'เดือนนี้': 'month', 'ไตรมาสนี้': 'quarter' };
+                        const period = periodMap[text] || 'month';
+                        loadKPIData(period);
+                    });
+                });
+            })();
+        </script>
+    </main>
+
+    <!-- ส่วน script components.js ให้อยู่ด้านล่างสุดของ body ตามเดิม -->
+    <script src="components.js?v=9"></script>
+    <div id="footer-placeholder"></div>
+</body>
+
+</html>

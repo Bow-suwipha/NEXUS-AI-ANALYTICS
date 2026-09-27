@@ -1,0 +1,11 @@
+body, button, input, select, textarea, [class*='font-'] {
+    font-family: 'Kanit', sans-serif !important;
+}
+@layer base {
+    body {
+        overscroll-behavior: none;
+    }
+}
+::-webkit-scrollbar {
+    display: none;
+}

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="tailwind-config.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="bg-surface text-on-surface font-sans antialiased">
+    <div id="navbar-placeholder"></div>
+    <main class="w-full pt-16 bg-background min-h-screen">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-space-lg w-full">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex flex-col gap-1">
+                    <h1 class="text-2xl text-on-surface font-bold tracking-tight">Reports (รายงานย้อนหลัง)</h1>
+                    <p class="text-sm text-on-surface-variant">คลังจัดเก็บรายงานผลการดำเนินงานที่สร้างโดย AI</p>
+                </div>
+                <!-- Filters & Actions -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <div class="relative bg-surface-container-low rounded-xl px-3 py-1.5 border border-outline-variant flex items-center">
+                        <select class="bg-transparent bg-none border-none p-0 text-sm focus:ring-0 appearance-none pr-6">
+                            <option>ทุกหมวดหมู่</option>
+                            <option>ยอดขายประจำวัน</option>
+                            <option>รายสัปดาห์</option>
+                            <option>รายเดือน</option>
+                        </select>
+                        <span class="material-symbols-outlined text-[18px] text-on-surface-variant absolute right-2 pointer-events-none">expand_more</span>
+                    </div>
+                    <div class="flex items-center bg-surface-container-low rounded-xl px-3 py-1.5 border border-outline-variant">
+                        <input class="bg-transparent border-none p-0 text-sm w-40 focus:ring-0" type="text" placeholder="เลือกช่วงเวลา">
+                        <span class="material-symbols-outlined text-[18px] text-on-surface-variant ml-2">calendar_month</span>
+                    </div>
+                    <!-- Generate Button -->
+                    <button onclick="document.getElementById('generate-modal').classList.remove('hidden')" class="ml-auto sm:ml-2 px-4 py-2 bg-primary text-on-primary text-sm font-semibold rounded-xl hover:opacity-90 flex items-center gap-2 shadow-sm transition-opacity">
+                        <span class="material-symbols-outlined text-[18px]">add_chart</span>สร้างรายงานประจำเดือน
+                    </button>
+                </div>
+            </div>
+
+            <!-- Report Grid/List -->
+            <div id="reports-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-space-md">
+                <!-- Dynamic Content Here -->
+                <div class="text-sm text-on-surface-variant col-span-full text-center py-8">กำลังโหลดรายงาน...</div>
+            </div>
+        </div>
+        <script src="components.js?v=6"></script>
+
+        <!-- Generate Report Modal -->
+        <div id="generate-modal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-surface rounded-2xl border border-outline-variant shadow-xl w-full max-w-md flex flex-col overflow-hidden">
+                <div class="p-4 border-b border-outline-variant flex items-center justify-between bg-surface-container-lowest">
+                    <h2 class="text-lg font-semibold text-on-surface">สร้างรายงานประจำเดือน</h2>
+                    <button onclick="document.getElementById('generate-modal').classList.add('hidden')" class="text-on-surface-variant hover:text-on-surface">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                <div class="p-space-lg flex flex-col gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-on-surface mb-1">เลือกเดือนที่ต้องการสรุป</label>
+                        <input type="month" id="report-month" class="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-2.5 text-sm text-on-surface focus:ring-primary focus:border-primary">
+                        <p class="text-xs text-on-surface-variant mt-1">ไฟล์จะถูกตั้งชื่อในรูปแบบ เดือน_ปี อัตโนมัติ</p>
+                    </div>
+                </div>
+                <div class="p-4 border-t border-outline-variant bg-surface-container-lowest flex justify-end gap-2">
+                    <button onclick="document.getElementById('generate-modal').classList.add('hidden')" class="px-4 py-2 text-sm font-medium text-on-surface border border-outline-variant rounded-xl hover:bg-surface-container-low transition-colors">ยกเลิก</button>
+                    <button id="btn-submit-report" onclick="submitGenerateReport()" class="px-4 py-2 text-sm font-semibold text-on-primary bg-primary rounded-xl hover:opacity-90 flex items-center gap-2 transition-opacity">
+                        <span class="material-symbols-outlined text-[18px]" id="btn-submit-icon">autorenew</span>สร้างรายงาน
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            async function submitGenerateReport() {
+                const monthInput = document.getElementById('report-month').value;
+                if (!monthInput) {
+                    alert('กรุณาเลือกเดือน');
+                    return;
+                }
+                
+                const btn = document.getElementById('btn-submit-report');
+                const icon = document.getElementById('btn-submit-icon');
+                btn.disabled = true;
+                btn.classList.add('opacity-50');
+                icon.classList.add('animate-spin');
+                
+                try {
+                    const res = await fetch('api/generate_report.php', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ month_val: monthInput })
+                    });
+                    const data = await res.json();
+                    
+                    if (data.status === 'success') {
+                        alert('สร้างรายงานสำเร็จ!');
+                        location.reload();
+                    } else {
+                        alert('เกิดข้อผิดพลาด: ' + (data.message || 'ไม่สามารถสร้างรายงานได้'));
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+                } finally {
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-50');
+                    icon.classList.remove('animate-spin');
+                }
+            }
+
+            (async () => {
+                try {
+                    const res = await fetch('api/reports.php');
+                    if (res.ok) {
+                        const reports = await res.json();
+                        const container = document.getElementById('reports-container');
+                        container.innerHTML = ''; // clear loading
+
+                        if (reports.length === 0) {
+                            container.innerHTML = `<div class="text-sm text-on-surface-variant col-span-full text-center py-8">ไม่พบรายงาน</div>`;
+                            return;
+                        }
+
+                        reports.forEach(r => {
+                            const date = new Date(r.created_at).toLocaleDateString('th-TH');
+                            const card = document.createElement('div');
+                            card.className = "bg-surface rounded-2xl border border-outline-variant shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow";
+
+                            let badgeClass = "bg-surface-container-low text-on-surface-variant";
+                            if (r.report_type === 'Weekly') badgeClass = "bg-primary/20 text-on-surface font-medium";
+
+                            card.innerHTML = `
+                            <div class="p-space-md border-b border-surface-container">
+                                <div class="flex items-start justify-between mb-2">
+                                    <span class="px-2 py-1 ${badgeClass} text-xs rounded-md">${r.report_type} Report</span>
+                                    <span class="text-xs text-on-surface-variant">${date}</span>
+                                </div>
+                                <h3 class="text-base font-semibold text-on-surface">${r.report_name}</h3>
+                            </div>
+                            <div class="p-space-sm flex items-center gap-2 justify-end bg-surface-container-lowest rounded-b-2xl">
+                                <button onclick="window.location.href='export_pdf.php?id=${r.id}'" class="px-3 py-1.5 rounded-lg bg-surface text-on-surface border border-outline-variant text-xs font-medium hover:bg-surface-container-low flex items-center gap-1 transition-colors">
+                                    <span class="material-symbols-outlined text-[16px] text-error">picture_as_pdf</span> PDF
+                                </button>
+                                <button onclick="window.location.href='export_excel.php?id=${r.id}'" class="px-3 py-1.5 rounded-lg bg-primary text-on-primary text-xs font-semibold hover:opacity-90 flex items-center gap-1 transition-colors">
+                                    <span class="material-symbols-outlined text-[16px]">file_download</span> Excel
+                                </button>
+                            </div>
+                        `;
+                            container.appendChild(card);
+                        });
+                    }
+                } catch (err) {
+                    console.error("Failed to load reports", err);
+                    document.getElementById('reports-container').innerHTML = `<div class="text-sm text-error col-span-full text-center py-8">ไม่สามารถโหลดรายงานได้</div>`;
+                }
+            })();
+        </script>
+    </main>
+    <div id="footer-placeholder"></div>
+</body>
+
+</html>

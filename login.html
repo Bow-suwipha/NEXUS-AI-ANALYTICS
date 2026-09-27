@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Login - Nexus AI Analytics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="tailwind-config.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-background text-on-surface font-sans min-h-screen flex items-center justify-center">
+    
+    <div class="w-full max-w-md p-8 rounded-2xl bg-surface border border-outline-variant shadow-lg mx-4">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-primary mb-2 tracking-tight">Nexus AI</h1>
+            <p class="text-sm text-on-surface-variant">ระบบวิเคราะห์ข้อมูลยอดขายอัจฉริยะ</p>
+        </div>
+
+        <form id="loginForm" class="space-y-5">
+            <div id="errorMsg" class="hidden p-3 rounded-lg bg-error-container text-on-error-container text-sm font-medium text-center">
+                ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-on-surface mb-1" for="username">ชื่อผู้ใช้งาน (Username)</label>
+                <input type="text" id="username" class="w-full px-4 py-2 rounded-xl bg-surface-container-low border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary text-sm text-on-surface" placeholder="somchai" required value="somchai">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-on-surface mb-1" for="password">รหัสผ่าน</label>
+                <input type="password" id="password" class="w-full px-4 py-2 rounded-xl bg-surface-container-low border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary text-sm text-on-surface" placeholder="••••••••" required value="password123">
+            </div>
+            
+            <button type="submit" id="submitBtn" class="w-full py-2.5 rounded-xl bg-primary text-on-primary font-semibold text-sm hover:bg-primary/90 transition-colors shadow-sm flex items-center justify-center gap-2">
+                <span>เข้าสู่ระบบ</span>
+            </button>
+        </form>
+        
+        <div class="mt-6 text-center">
+                    <p class="text-[11px] text-center text-on-surface-variant mt-4">สำหรับทดสอบเข้าระบบ: somchai / รหัสผ่าน: password123</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('errorMsg');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // UI state
+            errorMsg.classList.add('hidden');
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span> กำลังเข้าสู่ระบบ...';
+            submitBtn.disabled = true;
+
+            try {
+                const formData = new URLSearchParams();
+                formData.append('username', username);
+                formData.append('password', password);
+
+                const response = await fetch('api/login.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData.toString()
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('nexus_token', data.access_token);
+                    window.location.href = 'overview.html';
+                } else {
+                    errorMsg.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error("Login failed", error);
+                errorMsg.classList.remove('hidden');
+                errorMsg.innerText = "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้";
+            } finally {
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
