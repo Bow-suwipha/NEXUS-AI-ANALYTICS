@@ -166,10 +166,10 @@
                         <button onclick="deleteReport(${r.id})" class="mr-auto px-2 py-1.5 rounded-lg text-on-surface-variant hover:text-error hover:bg-error/10 flex items-center gap-1 transition-colors text-xs" title="ลบรายงาน">
                             <span class="material-symbols-outlined text-[16px]">delete</span>
                         </button>
-                        <button data-export-url="export_pdf.php?id=${r.id}" data-export-type="pdf" class="btn-export px-3 py-1.5 rounded-lg bg-surface text-on-surface border border-outline-variant text-xs font-medium hover:bg-surface-container-low flex items-center gap-1 transition-colors">
+                        <button data-export-url="api/export_pdf.php?id=${r.id}" data-export-type="pdf" class="btn-export px-3 py-1.5 rounded-lg bg-surface text-on-surface border border-outline-variant text-xs font-medium hover:bg-surface-container-low flex items-center gap-1 transition-colors">
                             <span class="material-symbols-outlined text-[16px] text-error">picture_as_pdf</span> PDF
                         </button>
-                        <button data-export-url="export_excel.php?id=${r.id}" data-export-type="excel" class="btn-export px-3 py-1.5 rounded-lg bg-primary text-on-primary text-xs font-semibold hover:opacity-90 flex items-center gap-1 transition-colors">
+                        <button data-export-url="api/export_excel.php?id=${r.id}" data-export-type="excel" class="btn-export px-3 py-1.5 rounded-lg bg-primary text-on-primary text-xs font-semibold hover:opacity-90 flex items-center gap-1 transition-colors">
                             <span class="material-symbols-outlined text-[16px]">file_download</span> Excel
                         </button>
                     </div>
@@ -277,3 +277,4 @@
 </body>
 
 </html>
+

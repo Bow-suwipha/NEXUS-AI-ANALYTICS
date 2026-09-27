@@ -1,25 +1,12 @@
 <?php
-require 'vendor/autoload.php';
+require '../vendor/autoload.php'; require 'db.php';
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Pdf\Mpdf;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 
-// Connect to Database
-$host = '127.0.0.1';
-$db   = 'nexus_ai_analytics';
-$user = 'root';
-$pass = '';
 
-$dsn = "mysql:host=$host;dbname=$db;charset=utf8mb4";
-$options = [
-    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-];
-
-try {
-    $pdo = new PDO($dsn, $user, $pass, $options);
 } catch (\PDOException $e) {
     die("Database connection failed: " . $e->getMessage());
 }
@@ -111,3 +98,4 @@ try {
     echo "Error generating PDF. Please ensure you have installed mpdf via: composer require mpdf/mpdf\n";
     echo $e->getMessage();
 }
+
